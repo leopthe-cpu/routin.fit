@@ -1,7 +1,7 @@
 // The exercise library at runtime: match free-text exercise names to library
 // entries, and find equivalent swaps that fit the user's gym and injuries.
 
-import data from '../data/library.json';
+import data from '../data/library-core.json';
 import { normalizeName, nameTokens } from './exerciseNames';
 
 export const LIBRARY = data.exercises;
@@ -122,7 +122,7 @@ export function findSwaps(exercise, profile = {}, limit = 3) {
       if (preference && e.kind === preference) score += 1;
       if (e.lengthened === exercise.lengthened) score += 0.5;
       if ((levelRank[e.level] ?? 0) <= (levelRank[level] ?? 0)) score += 0.5;
-      if (e.images.length) score += 0.2;
+      if (e.hasImages) score += 0.2;
       return { exercise: e, score, sharedPrimary };
     })
     .filter((s) => s.sharedPrimary > 0)

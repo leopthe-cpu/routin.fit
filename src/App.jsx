@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { CalendarDays, ListChecks, Play } from 'lucide-react';
+import { CalendarDays, ChartNoAxesColumn, ListChecks, Play, Settings } from 'lucide-react';
 import { useStore, sessionProgress } from './store';
 import { todayISO } from './lib/dates';
 import WeekScreen from './screens/WeekScreen';
 import SessionScreen from './screens/SessionScreen';
 import PlansScreen from './screens/PlansScreen';
+import ProgressScreen from './screens/ProgressScreen';
+import SettingsScreen from './screens/SettingsScreen';
 import TimerBar from './components/TimerBar';
 
 const ORB = {
@@ -12,6 +14,8 @@ const ORB = {
   morning: 'radial-gradient(circle, #a78bfa 0%, transparent 70%)',
   workout: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)',
   plans: 'radial-gradient(circle, #4f46e5 0%, transparent 70%)',
+  progress: 'radial-gradient(circle, #0891b2 0%, transparent 70%)',
+  settings: 'radial-gradient(circle, #312e81 0%, transparent 70%)',
 };
 
 /** Short beep + vibration when a timer runs out. Both are best effort. */
@@ -96,6 +100,8 @@ export default function App() {
           <SessionScreen key={`${open.date}|${open.kind}`} date={open.date} kind={open.kind} onBack={() => setScreen('week')} />
         )}
         {screen === 'plans' && <PlansScreen />}
+        {screen === 'progress' && <ProgressScreen />}
+        {screen === 'settings' && <SettingsScreen />}
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md">
@@ -124,7 +130,9 @@ export default function App() {
         >
           {[
             ['week', 'Week', CalendarDays],
+            ['progress', 'Progress', ChartNoAxesColumn],
             ['plans', 'Plans', ListChecks],
+            ['settings', 'Settings', Settings],
           ].map(([id, label, Icon]) => {
             const on = screen === id || (id === 'week' && screen === 'session');
             return (

@@ -113,6 +113,14 @@ writeFileSync(
     .join(',\n')}\n]}\n`,
 );
 
+// Slim copy bundled with the app: no instructions or image links (those stay in
+// library.json for a future "how to" screen loaded on demand).
+const core = entries.map(({ instructions, images, source, ...rest }) => ({ ...rest, hasImages: images.length > 0 }));
+writeFileSync(
+  join(root, 'src', 'data', 'library-core.json'),
+  `{"datasetSha256":"${sha}","exercises":[\n${core.map((e) => JSON.stringify(e)).join(',\n')}\n]}\n`,
+);
+
 // ---- review report ----
 const count = (arr, key) =>
   Object.entries(arr.reduce((m, x) => ((m[key(x)] = (m[key(x)] ?? 0) + 1), m), {})).sort((a, b) => b[1] - a[1]);

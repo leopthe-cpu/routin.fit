@@ -113,6 +113,27 @@ export default function PlansScreen() {
         <p className="text-sm text-2">Paste a plan as text. Days start with "Mon:", exercises look like "Name: 3x8-10".</p>
       </header>
 
+      <div className="glass flex items-center justify-between p-4">
+        <div>
+          <p className="font-semibold">Weight unit</p>
+          <p className="text-xs text-3">Saved weights convert automatically.</p>
+        </div>
+        <div className="flex rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.06)' }} role="radiogroup" aria-label="Weight unit">
+          {['kg', 'lb'].map((u) => (
+            <button
+              key={u}
+              role="radio"
+              aria-checked={settings.unit === u}
+              onClick={() => setSettings({ unit: u })}
+              className="rounded-lg px-4 py-1.5 text-sm font-semibold"
+              style={settings.unit === u ? { background: 'linear-gradient(135deg,#6366f1,#06b6d4)' } : { color: 'var(--text-2)' }}
+            >
+              {u}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-2">
         {plans.map((p) =>
           editing === p.id ? (
@@ -181,28 +202,6 @@ export default function PlansScreen() {
         </button>
       )}
 
-      <section className="glass space-y-3 p-4">
-        <div>
-          <h2 className="font-semibold">AI import (optional)</h2>
-          <p className="mt-0.5 text-xs text-3">
-            Only used when a pasted plan can't be read. Uses OpenRouter; the key stays in this browser.
-          </p>
-        </div>
-        <input
-          type="password"
-          value={settings.openrouterKey}
-          onChange={(e) => setSettings({ openrouterKey: e.target.value.trim() })}
-          placeholder="OpenRouter API key"
-          autoComplete="off"
-          className="w-full rounded-xl bg-white/5 px-3 py-2.5 text-sm outline-none ring-1 ring-white/10 focus:ring-indigo-400"
-        />
-        <input
-          value={settings.openrouterModel}
-          onChange={(e) => setSettings({ openrouterModel: e.target.value.trim() })}
-          placeholder="Model id, as listed on openrouter.ai/models"
-          className="w-full rounded-xl bg-white/5 px-3 py-2.5 text-sm outline-none ring-1 ring-white/10 focus:ring-indigo-400"
-        />
-      </section>
     </div>
   );
 }

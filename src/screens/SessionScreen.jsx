@@ -2,6 +2,7 @@ import { Check, ChevronLeft, ExternalLink, Play, RotateCcw, Trash2 } from 'lucid
 import { useStore, sessionKey, sessionProgress } from '../store';
 import { estimateWorkoutMinutes, restSecondsFor, toBlocks } from '../lib/estimate';
 import { fromISODate } from '../lib/dates';
+import WeightControl from '../components/WeightControl';
 
 const youtubeUrl = (name) => `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} form`)}`;
 
@@ -55,6 +56,9 @@ function ExerciseCard({ ex, session, started, onToggle }) {
           {ex.sets} × {ex.target.label}
         </span>
         {!ex.supersetGroup && <span className="text-xs text-3">rest {restSecondsFor(ex)} s</span>}
+      </div>
+      <div className="mt-3">
+        <WeightControl name={ex.name} />
       </div>
       <div className="mt-3">
         <SetDots count={ex.sets} done={done} disabled={!started} onToggle={(i) => onToggle(ex.id, i)} />

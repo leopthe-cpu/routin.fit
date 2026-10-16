@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { parsePlanText } from './lib/parsePlan';
 import { restSecondsFor } from './lib/estimate';
 import { todayISO } from './lib/dates';
+import { exerciseKey } from './lib/weights';
 import { DEFAULT_PLAN_NAME, DEFAULT_PLAN_TEXT } from './data/defaultPlan';
 
 // localStorage can throw (private mode, blocked storage). Fall back to memory.
@@ -72,7 +73,11 @@ export const useStore = create(
       activeSessionKey: null,
       // { endsAt, total, label, sessionKey, complete?: { itemId, setIndex } }
       timer: null,
-      settings: { openrouterKey: '', openrouterModel: '' },
+      settings: { openrouterKey: '', openrouterModel: '', unit: 'kg' },
+      // Current working weight per exercise key: { value, unit, updatedAt }. Stays until changed.
+      weights: {},
+      // Imported past workouts: [{ date, key, name, sets: [{ value, unit }] }]
+      history: [],
 
       activePlan: () => {
         const { plans, activePlanId } = get();
@@ -90,6 +95,32 @@ export const useStore = create(
         }),
       setActivePlan: (id) => set({ activePlanId: id }),
       setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+
+      setWeight: (key, value, unit) =>
+        set((s) => ({
+          weights: { ...s.weights, [key]: { value, unit, updatedAt: new Date().toISOString() } },
+        })),
+
+      /** Merge a backup or an import file. Newer weights win; history is de-duplicated. */
+      importData: (data) =>
+        set((s) => {
+          const weights = { ...s.weights };
+          for (const [k, w] of Object.entries(data.weights ?? {})) {
+            if (!weights[k] || (w.updatedAt ?? '') > (weights[k].updatedAt ?? '')) weights[k] = w;
+          }
+          const seen = new Set(s.history.map((h) => `${h.date}|${h.key}`));
+          const history = [...s.history];
+          for (const h of data.history ?? []) {
+            if (!seen.has(`${h.date}|${h.key}`)) {
+              history.push(h);
+              seen.add(`${h.date}|${h.key}`);
+            }
+          }
+          const ids = new Set(s.plans.map((p) => p.id));
+          const plans = [...s.plans, ...(data.plans ?? []).filter((p) => !ids.has(p.id))];
+          const sessions = { ...(data.sessions ?? {}), ...s.sessions };
+          return { weights, history, plans, sessions };
+        }),
 
       /** Start (or resume) a session. The day's content is snapshotted so later plan edits don't break it. */
       startSession: ({ date, kind, day, planId }) => {
@@ -125,7 +156,17 @@ export const useStore = create(
           ...session.done,
           [itemId]: checking ? [...current, setIndex].sort((a, b) => a - b) : current.filter((i) => i !== setIndex),
         };
-        const updated = { ...session, done: nextDone };
+        // Remember the weight each workout set was done with, for progress charts.
+        let loads = session.loads ?? {};
+        if (session.kind === 'workout') {
+          const item = session.snapshot.exercises.find((e) => e.id === itemId);
+          const w = item && get().weights[exerciseKey(item.name)];
+          const byItem = { ...(loads[itemId] ?? {}) };
+          if (checking && w) byItem[setIndex] = { value: w.value, unit: w.unit };
+          if (!checking) delete byItem[setIndex];
+          loads = { ...loads, [itemId]: byItem };
+        }
+        const updated = { ...session, done: nextDone, loads };
         set((s) => ({ sessions: { ...s.sessions, [key]: updated } }));
 
         if (!checking) return;
@@ -208,6 +249,12 @@ export const useStore = create(
       name: 'workout-app',
       version: 1,
       storage: createJSONStorage(() => safeStorage),
+      // Keep defaults for settings added after a user's data was first saved.
+      merge: (persisted, current) => ({
+        ...current,
+        ...persisted,
+        settings: { ...current.settings, ...(persisted?.settings ?? {}) },
+      }),
       partialize: (s) => ({
         plans: s.plans,
         activePlanId: s.activePlanId,
@@ -215,6 +262,8 @@ export const useStore = create(
         activeSessionKey: s.activeSessionKey,
         timer: s.timer,
         settings: s.settings,
+        weights: s.weights,
+        history: s.history,
       }),
     },
   ),
