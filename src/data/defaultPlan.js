@@ -4,7 +4,7 @@ export const DEFAULT_PLAN_NAME = 'Dumbbell Split';
 
 export const DEFAULT_PLAN_TEXT = `Mon: Chest & Biceps
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Incline Dumbbell Bench Press: 3x6-8
 * Flat Dumbbell Bench Press: 3x8-10
 * Dumbbell Squeeze Press: 3x10-12
@@ -14,7 +14,7 @@ export const DEFAULT_PLAN_TEXT = `Mon: Chest & Biceps
 
 Tue: Back, Rear Delts & Traps
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Single-Arm Dumbbell Rows: 3x6-8
 * Chest-Supported Dumbbell Rows: 3x8-10
 * Dumbbell Pullovers: 3x10-12
@@ -25,12 +25,12 @@ Tue: Back, Rear Delts & Traps
 Wed: Rest Day
 REST DAY
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Focus on recovery and hydration.
 
 Thu: Shoulders & Triceps
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Seated Dumbbell Shoulder Press: 3x6-8
 * Dumbbell Lateral Raises: 3x12-15
 * Dumbbell Skull Crushers: 3x8-10
@@ -40,7 +40,7 @@ Thu: Shoulders & Triceps
 
 Fri: Upper Body, Forearms & Rear Delts
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Flat Dumbbell Bench Press: 3x6-8
 * Face Pulls (or Banded/Cable Rear Delt Pulls): 3x12-15
 * Standing Hammer Curls + Dumbbell Kickbacks (Superset): 3x10-12 each
@@ -52,7 +52,7 @@ Fri: Upper Body, Forearms & Rear Delts
 Sat: Rest Day
 REST DAY
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Active Recovery: Light 20-30 min walk or gentle stretching for blood flow.
 * Sleep: Aim for 7-9 hours to maximize Growth Hormone release for repair.
 * Nutrition: Stay hydrated and eat well.
@@ -60,6 +60,6 @@ REST DAY
 Sun: Rest Day
 REST DAY
 
-* Morning Routine (5 min): Hyper-mobility & posture flow, 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
+* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).
 * Focus on recovery and hydration.
 `;

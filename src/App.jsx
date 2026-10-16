@@ -46,6 +46,7 @@ function useTicker() {
   const timer = useStore((s) => s.timer);
   const expireTimer = useStore((s) => s.expireTimer);
   const firedFor = useRef(null);
+  const switchedFor = useRef(null);
 
   useEffect(() => {
     const tick = () => setNow(Date.now());
@@ -58,6 +59,11 @@ function useTicker() {
   }, []);
 
   useEffect(() => {
+    // Halfway cue on moves done one side at a time.
+    if (timer?.switchAt && now >= timer.switchAt && now < timer.endsAt && switchedFor.current !== timer.switchAt) {
+      switchedFor.current = timer.switchAt;
+      if (now - timer.switchAt < 10_000) alertTimerDone();
+    }
     if (timer && now >= timer.endsAt && firedFor.current !== timer.endsAt) {
       firedFor.current = timer.endsAt;
       // Only make noise if it ran out recently, not when reopening the app hours later.

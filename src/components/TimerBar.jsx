@@ -15,7 +15,14 @@ export default function TimerBar({ now }) {
       <div className="mx-auto mb-2 h-1 w-10 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }} />
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-3">{timer.label}</p>
+          <p className="truncate text-xs text-3">
+            {timer.label}
+            {timer.switchAt && (
+              <span className="ml-1.5 font-semibold" style={{ color: '#22d3ee' }}>
+                · {now < timer.switchAt ? timer.sideLabels[0] : `Switch → ${timer.sideLabels[1]}`}
+              </span>
+            )}
+          </p>
           <p className="text-2xl font-bold tabular-nums">{fmt(remaining)}</p>
         </div>
         <button onClick={() => adjustTimer(-15)} aria-label="15 seconds less" className="btn-ghost p-2.5">

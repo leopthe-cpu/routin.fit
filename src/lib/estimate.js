@@ -1,6 +1,9 @@
 // Rough session-length and copy generation. The numbers are assumptions
 // (about 3 s per rep, rest by rep range), so the UI always shows "≈".
 
+import { moveSeconds, morningMinutes } from './morning';
+import { findStretch } from '../data/stretches';
+
 const SEC_PER_REP = 3;
 const SETUP_SEC = 45; // moving between exercises, loading dumbbells
 const SUPERSET_REST = 60;
@@ -119,10 +122,16 @@ function stretchAreas(items) {
 
 export function morningCopy(morning) {
   const n = morning.items.length;
+  const secs = morning.items.map((_, i) => moveSeconds(morning, i));
+  const lo = Math.min(...secs);
+  const hi = Math.max(...secs);
+  const sided = morning.items.filter((name) => findStretch(name)?.dose.perSide).length;
+  const parts = [`${n} move${n === 1 ? '' : 's'}`, lo === hi ? `${lo} s each` : `${lo}–${hi} s each`];
+  if (sided) parts.push(`${sided} with a halfway switch`);
   return {
     title: 'Morning stretches',
     subtitle: `Start your day loose: ${joinWords(stretchAreas(morning.items)) || 'full-body mobility'}`,
-    detail: `${n} move${n === 1 ? '' : 's'} · about ${Math.max(1, Math.round((morning.minutes * 60) / n / 10) * 10)} s each`,
-    minutes: morning.minutes,
+    detail: parts.join(' · '),
+    minutes: morningMinutes(morning),
   };
 }

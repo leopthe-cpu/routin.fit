@@ -1,29 +1,71 @@
-import { Check, ChevronLeft, ExternalLink, Play, RotateCcw, Trash2 } from 'lucide-react';
-import { useStore, sessionKey, sessionProgress } from '../store';
+import { useEffect, useState } from 'react';
+import { Check, ChevronLeft, Clock, ExternalLink, Play, RotateCcw, Trash2 } from 'lucide-react';
+import { useStore, sessionKey, sessionProgress, morningMinutes, moveSeconds } from '../store';
 import { estimateWorkoutMinutes, restSecondsFor, toBlocks } from '../lib/estimate';
 import { fromISODate } from '../lib/dates';
+import { formLinks } from '../lib/youtube';
+import { findStretch } from '../data/stretches';
 import WeightControl from '../components/WeightControl';
 
-const youtubeUrl = (name) => `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} form`)}`;
+function FormLinks({ name }) {
+  const links = formLinks(name);
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      {links.map((l) => (
+        <a
+          key={l.url}
+          href={l.url}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Watch ${l.label} form on YouTube`}
+          title={l.label}
+          className="flex items-center gap-1 rounded-lg p-1 text-3 hover:text-white"
+        >
+          <ExternalLink className="h-4 w-4" />
+          {links.length > 1 && <span className="max-w-[4.5rem] truncate text-[10px]">{l.label.split(' ')[0]}</span>}
+        </a>
+      ))}
+    </div>
+  );
+}
 
-function SetDots({ count, done, disabled, onToggle }) {
+/** Minutes since the session started, ticking once a second. */
+function Elapsed({ since }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const secs = Math.max(0, Math.floor((now - new Date(since).getTime()) / 1000));
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = String(secs % 60).padStart(2, '0');
+  return <span className="tabular-nums">{h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`}</span>;
+}
+
+const dotStyle = (on) => ({
+  background: on ? 'rgba(34,197,94,0.9)' : 'rgba(255,255,255,0.06)',
+  border: `1px solid ${on ? 'rgba(74,222,128,0.9)' : 'rgba(255,255,255,0.15)'}`,
+});
+
+const playStyle = { background: 'linear-gradient(135deg,#6366f1,#06b6d4)', border: '1px solid rgba(255,255,255,0.25)' };
+
+function SetDots({ count, done, disabled, playFirst, onToggle }) {
   return (
     <div className="flex flex-wrap gap-2">
       {Array.from({ length: count }, (_, i) => {
         const on = done.includes(i);
+        const play = playFirst && i === 0;
         return (
           <button
             key={i}
             disabled={disabled}
             onClick={() => onToggle(i)}
-            aria-label={`Set ${i + 1}${on ? ' done' : ''}`}
+            aria-label={play ? 'Start: set 1' : `Set ${i + 1}${on ? ' done' : ''}`}
             className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition disabled:opacity-40"
-            style={{
-              background: on ? 'rgba(34,197,94,0.9)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${on ? 'rgba(74,222,128,0.9)' : 'rgba(255,255,255,0.15)'}`,
-            }}
+            style={play ? playStyle : dotStyle(on)}
           >
-            {on ? <Check className="h-4 w-4" strokeWidth={3} /> : i + 1}
+            {on ? <Check className="h-4 w-4" strokeWidth={3} /> : play ? <Play className="ml-0.5 h-4 w-4" fill="white" /> : i + 1}
           </button>
         );
       })}
@@ -31,7 +73,7 @@ function SetDots({ count, done, disabled, onToggle }) {
   );
 }
 
-function ExerciseCard({ ex, session, started, onToggle }) {
+function ExerciseCard({ ex, session, finished, playFirst, onToggle }) {
   const done = session?.done[ex.id] ?? [];
   const complete = done.length >= ex.sets;
   return (
@@ -41,15 +83,7 @@ function ExerciseCard({ ex, session, started, onToggle }) {
           <h4 className="font-semibold leading-snug">{ex.name}</h4>
           {ex.note && <p className="mt-0.5 text-xs text-3">{ex.note}</p>}
         </div>
-        <a
-          href={youtubeUrl(ex.name)}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Watch ${ex.name} form on YouTube`}
-          className="shrink-0 p-1 text-3 hover:text-white"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </a>
+        <FormLinks name={ex.name} />
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className="pill" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>
@@ -61,7 +95,55 @@ function ExerciseCard({ ex, session, started, onToggle }) {
         <WeightControl name={ex.name} />
       </div>
       <div className="mt-3">
-        <SetDots count={ex.sets} done={done} disabled={!started} onToggle={(i) => onToggle(ex.id, i)} />
+        <SetDots count={ex.sets} done={done} disabled={finished} playFirst={playFirst} onToggle={(i) => onToggle(ex.id, i)} />
+      </div>
+    </div>
+  );
+}
+
+function MoveCard({ name, index, on, timing, seconds, finished, playable, onTick, onPlay }) {
+  const stretch = findStretch(name);
+  const title = stretch?.name ?? name.charAt(0).toUpperCase() + name.slice(1);
+  return (
+    <div className={`glass p-4 ${on ? 'glass-done' : ''}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h4 className="font-semibold leading-snug">
+            <span className="mr-1.5 text-3">{index + 1}.</span>
+            {title}
+          </h4>
+          {stretch && <p className="mt-1 text-xs text-2">{stretch.what}</p>}
+        </div>
+        <FormLinks name={name} />
+      </div>
+      {stretch && <p className="mt-2 text-xs leading-relaxed text-3">{stretch.benefit}</p>}
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          disabled={finished}
+          onClick={onTick}
+          aria-label={on ? `Untick ${title}` : `Tick ${title}`}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+          style={dotStyle(on)}
+        >
+          {on && <Check className="h-4 w-4" strokeWidth={3} />}
+        </button>
+        <div className="min-w-0 flex-1 text-xs">
+          <p className="flex items-center gap-1 text-2">
+            <Clock className="h-3 w-3 shrink-0" /> {seconds} s
+            {stretch?.dose.perSide && ` · switch at ${Math.round(seconds / 2)} s`}
+          </p>
+          {stretch && <p className="truncate text-3">{stretch.dose.label}</p>}
+        </div>
+        {playable && !on && (
+          <button
+            onClick={onPlay}
+            aria-label={`Start ${title} timer`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+            style={timing ? { background: 'rgba(6,182,212,0.3)', border: '1px solid rgba(34,211,238,0.6)' } : playStyle}
+          >
+            <Play className="ml-0.5 h-4 w-4" fill="white" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -76,7 +158,7 @@ export default function SessionScreen({ date, kind, onBack }) {
 
   const dayDate = fromISODate(date);
   const dayKey = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayDate.getDay()];
-  // An ongoing or finished session uses its own snapshot; otherwise preview today's plan.
+  // An ongoing or finished session uses its own snapshot; otherwise preview the plan.
   const day = plan?.days[dayKey];
   const started = !!session && !session.endedAt;
   const finished = !!session?.endedAt;
@@ -98,19 +180,22 @@ export default function SessionScreen({ date, kind, onBack }) {
   }
 
   const isMorning = kind === 'morning';
-  const minutes = isMorning ? content.minutes : estimateWorkoutMinutes(content.exercises);
+  const minutes = isMorning ? morningMinutes(content) : estimateWorkoutMinutes(content.exercises);
   const previewTotal = isMorning ? content.items.length : content.exercises.reduce((n, e) => n + e.sets, 0);
   const shownTotal = session ? total : previewTotal;
   const allDone = session && done >= total;
-  const perMove = isMorning ? Math.max(20, Math.round((content.minutes * 60) / content.items.length)) : 0;
 
-  const start = () => startSession({ date, kind, day, planId: plan.id });
+  // No start button: the first tap on a set or move starts the session.
+  const ensureStarted = () => {
+    if (!session) startSession({ date, kind, day, planId: plan.id });
+  };
   const onToggle = (itemId, i) => {
+    ensureStarted();
     toggleSet(key, itemId, i);
-    // Morning routine finishes itself once every move is ticked.
-    const s = useStore.getState().sessions[key];
-    const p = sessionProgress(s);
-    if (isMorning && p.done >= p.total) finishSession(key);
+  };
+  const onPlayMove = (index) => {
+    ensureStarted();
+    startMoveTimer(key, index);
   };
 
   return (
@@ -122,12 +207,26 @@ export default function SessionScreen({ date, kind, onBack }) {
 
       <header>
         <p className="text-xs font-semibold uppercase tracking-wider text-3">
-          {isMorning ? 'Morning stretches' : "Today's workout"}
+          {isMorning ? 'Morning routine' : "Today's workout"}
         </p>
         <h1 className="mt-1 text-2xl font-bold">{content.title}</h1>
         <p className="text-sm text-2">
           ≈ {minutes} min · {shownTotal} {isMorning ? 'moves' : 'sets'}
+          {started && (
+            <>
+              {' · '}
+              <span className="text-white">
+                <Elapsed since={session.startedAt} />
+              </span>
+            </>
+          )}
         </p>
+        {!session && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-3">
+            <Play className="h-3 w-3" /> Tap the play button to start
+            {isMorning ? '; each move flows into the next.' : ' with set 1.'}
+          </p>
+        )}
         {session && (
           <div className="mt-3">
             <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -148,68 +247,51 @@ export default function SessionScreen({ date, kind, onBack }) {
         )}
       </header>
 
-      {!session && (
-        <button onClick={start} className="btn-primary flex w-full items-center justify-center gap-2 py-3.5">
-          <Play className="h-4 w-4" /> Start {isMorning ? 'stretches' : 'session'}
-        </button>
-      )}
-
       {isMorning ? (
         <div className="space-y-2">
           {content.items.map((name, i) => {
             const id = `m-${i}`;
-            const on = session?.done[id]?.includes(0);
-            const timing = timer?.sessionKey === key && timer.complete?.itemId === id;
             return (
-              <div key={id} className={`glass flex items-center gap-3 p-3 ${on ? 'glass-done' : ''}`}>
-                <button
-                  disabled={!started}
-                  onClick={() => onToggle(id, 0)}
-                  aria-label={on ? `Untick ${name}` : `Tick ${name}`}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-                  style={{
-                    background: on ? 'rgba(34,197,94,0.9)' : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${on ? 'rgba(74,222,128,0.9)' : 'rgba(255,255,255,0.15)'}`,
-                  }}
-                >
-                  {on && <Check className="h-4 w-4" strokeWidth={3} />}
-                </button>
-                <span className="flex-1 text-sm">{name.charAt(0).toUpperCase() + name.slice(1)}</span>
-                <a href={youtubeUrl(name)} target="_blank" rel="noreferrer" aria-label={`Watch ${name} on YouTube`} className="p-1 text-3">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-                {started && !on && (
-                  <button
-                    onClick={() => startMoveTimer(key, id, perMove, name)}
-                    className="pill"
-                    style={{ background: timing ? 'rgba(6,182,212,0.25)' : 'rgba(255,255,255,0.08)', color: '#22d3ee' }}
-                  >
-                    <Play className="h-3 w-3" /> {perMove}s
-                  </button>
-                )}
-              </div>
+              <MoveCard
+                key={id}
+                name={name}
+                index={i}
+                on={!!session?.done[id]?.includes(0)}
+                timing={timer?.sessionKey === key && timer.complete?.itemId === id}
+                seconds={moveSeconds(content, i)}
+                finished={finished}
+                playable={!finished && (!!session || i === 0)}
+                onTick={() => onToggle(id, 0)}
+                onPlay={() => onPlayMove(i)}
+              />
             );
           })}
         </div>
       ) : (
         <div className="space-y-3">
-          {toBlocks(content.exercises).map((block, bi) =>
-            block.group && block.exercises.length > 1 ? (
+          {toBlocks(content.exercises).map((block, bi) => {
+            const cards = block.exercises.map((ex) => (
+              <ExerciseCard
+                key={ex.id}
+                ex={ex}
+                session={session}
+                finished={finished}
+                playFirst={!session && ex.id === content.exercises[0].id}
+                onToggle={onToggle}
+              />
+            ));
+            return block.group && block.exercises.length > 1 ? (
               <div key={bi} className="relative pl-4">
                 <div className="absolute bottom-3 left-0 top-3 w-1 rounded-full" style={{ background: 'linear-gradient(#6366f1, #06b6d4)' }} />
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: '#22d3ee' }}>
                   Superset {block.group} · rest {restSecondsFor(block.exercises[0])} s after both
                 </p>
-                <div className="space-y-2">
-                  {block.exercises.map((ex) => (
-                    <ExerciseCard key={ex.id} ex={ex} session={session} started={started} onToggle={onToggle} />
-                  ))}
-                </div>
+                <div className="space-y-2">{cards}</div>
               </div>
             ) : (
-              <ExerciseCard key={block.exercises[0].id} ex={block.exercises[0]} session={session} started={started} onToggle={onToggle} />
-            ),
-          )}
+              cards[0]
+            );
+          })}
         </div>
       )}
 

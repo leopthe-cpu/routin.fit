@@ -18,10 +18,10 @@ describe('parsePlanText on the starter plan', () => {
 
   it('separates the morning routine from the workout', () => {
     expect(days.Mon.morning.minutes).toBe(5);
-    expect(days.Mon.morning.items).toHaveLength(5);
-    expect(days.Mon.morning.items[4]).toBe('shoulder pass-throughs (with band/stick)');
+    expect(days.Mon.morning.items).toHaveLength(4);
+    expect(days.Mon.morning.items[3]).toBe('shoulder pass-throughs (with band/stick)');
     expect(days.Mon.exercises).toHaveLength(6);
-    expect(days.Wed.morning.items).toHaveLength(5);
+    expect(days.Wed.morning.items).toHaveLength(4);
   });
 
   it('keeps rest-day guidance as notes', () => {

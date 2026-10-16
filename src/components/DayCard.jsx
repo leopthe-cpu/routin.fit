@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Clock } from 'lucide-react';
+import { Check, Clock, Play } from 'lucide-react';
 
 const STATUS_STYLE = {
   todo: null,
@@ -42,7 +42,13 @@ export default function DayCard({ icon: Icon, accent, title, subtitle, detail, m
                 {progressText ? ` · ${progressText}` : ''}
               </span>
             ) : (
-              <ChevronRight className="h-4 w-4 text-3" />
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                style={{ background: 'linear-gradient(135deg,#6366f1,#06b6d4)' }}
+                aria-hidden="true"
+              >
+                <Play className="ml-0.5 h-3.5 w-3.5" fill="white" />
+              </span>
             )}
           </div>
         </div>

@@ -4,6 +4,8 @@ import { parsePlanText } from './lib/parsePlan';
 import { restSecondsFor } from './lib/estimate';
 import { todayISO } from './lib/dates';
 import { exerciseKey } from './lib/weights';
+import { findStretch } from './data/stretches';
+import { moveSeconds } from './lib/morning';
 import { DEFAULT_PLAN_NAME, DEFAULT_PLAN_TEXT } from './data/defaultPlan';
 
 // localStorage can throw (private mode, blocked storage). Fall back to memory.
@@ -45,6 +47,8 @@ export function makePlan(name, text, startDate = todayISO()) {
 }
 
 export const sessionKey = (date, kind) => `${date}|${kind}`;
+
+export { moveSeconds, morningMinutes } from './lib/morning';
 
 /** Items a session tracks: exercises for a workout, moves for the morning routine. */
 export function sessionItems(session) {
@@ -170,11 +174,15 @@ export const useStore = create(
         set((s) => ({ sessions: { ...s.sessions, [key]: updated } }));
 
         if (!checking) return;
-        if (session.kind === 'workout') get().maybeStartRest(updated, itemId, setIndex);
-        else {
-          const t = get().timer;
-          if (t?.complete?.itemId === itemId) set({ timer: null });
+        if (session.kind === 'workout') {
+          get().maybeStartRest(updated, itemId, setIndex);
+          return;
         }
+        const t = get().timer;
+        if (t?.complete?.itemId === itemId) set({ timer: null });
+        // The morning routine finishes itself once every move is ticked.
+        const p = sessionProgress(updated);
+        if (p.done >= p.total) get().finishSession(key);
       },
 
       maybeStartRest: (session, itemId, setIndex) => {
@@ -193,14 +201,29 @@ export const useStore = create(
         });
       },
 
-      /** Timed move for the morning routine; ticks the move off when it ends. */
-      startMoveTimer: (key, itemId, seconds, label) =>
+      /**
+       * Timed morning move. Ticks the move off when it ends and starts the next one;
+       * moves done per side get a halfway cue to switch.
+       */
+      startMoveTimer: (key, index) => {
+        const session = get().sessions[key];
+        if (!session) return;
+        const name = session.snapshot.items[index];
+        const seconds = moveSeconds(session.snapshot, index);
+        const stretch = findStretch(name);
+        const now = Date.now();
         set({
           timer: {
-            endsAt: Date.now() + seconds * 1000, total: seconds, label, sessionKey: key,
-            complete: { itemId, setIndex: 0 },
+            endsAt: now + seconds * 1000,
+            total: seconds,
+            label: stretch?.name ?? name.charAt(0).toUpperCase() + name.slice(1),
+            sessionKey: key,
+            complete: { itemId: `m-${index}`, setIndex: 0 },
+            switchAt: stretch?.dose.perSide ? now + (seconds * 1000) / 2 : null,
+            sideLabels: stretch?.dose.sideLabels ?? ['First side', 'Second side'],
           },
-        }),
+        });
+      },
 
       adjustTimer: (deltaSeconds) =>
         set((s) =>
@@ -217,6 +240,12 @@ export const useStore = create(
           const session = get().sessions[t.sessionKey];
           if (session && !session.done[t.complete.itemId]?.includes(t.complete.setIndex)) {
             get().toggleSet(t.sessionKey, t.complete.itemId, t.complete.setIndex);
+          }
+          // Flow straight into the next unticked move.
+          const after = get().sessions[t.sessionKey];
+          if (after?.kind === 'morning' && !after.endedAt) {
+            const next = after.snapshot.items.findIndex((_, i) => !after.done[`m-${i}`]?.includes(0));
+            if (next >= 0) get().startMoveTimer(t.sessionKey, next);
           }
         }
       },
@@ -247,7 +276,18 @@ export const useStore = create(
     }),
     {
       name: 'workout-app',
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        // v2: drop the vague "Hyper-mobility & posture flow" move from saved plans.
+        if (version < 2 && persisted?.plans) {
+          persisted.plans = persisted.plans.map((p) => {
+            if (!p.sourceText?.includes('Hyper-mobility & posture flow, ')) return p;
+            const sourceText = p.sourceText.replaceAll('Hyper-mobility & posture flow, ', '');
+            return { ...p, sourceText, days: parsePlanText(sourceText).days };
+          });
+        }
+        return persisted;
+      },
       storage: createJSONStorage(() => safeStorage),
       // Keep defaults for settings added after a user's data was first saved.
       merge: (persisted, current) => ({
