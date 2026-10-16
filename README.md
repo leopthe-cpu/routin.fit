@@ -4,6 +4,26 @@ A personal workout companion: a weekly plan shown day by day, with separate
 **Morning stretches** and **Today's workout** sessions, set-by-set tracking,
 automatic rest timers and progress that survives navigation and reloads.
 
+## Today screen
+
+The top third is a grainy sky that follows the clock (early, morning,
+afternoon, late afternoon, evening/night; `src/lib/sky.js`), with a greeting
+and a new phrase on each open. Below it: date, time, local weather, four tiles
+(Stretch, Workout, Meditate, Alarms), today's goals and the week's progress.
+Swipe sideways for Plans, Progress and Settings.
+
+Tapping Stretch or Workout grows the sky to full screen with the session on
+frosted glass: a hands-free guided stretch (tap to pause, optional rain sound
+generated in the browser) or a one-exercise-at-a-time workout with Done set
+and a rest screen. "List" shows the whole day. Meditate and Alarms are
+previews for now.
+
+Preview any sky with `?sky=early|morning|afternoon|late|evening`.
+
+Weather comes from [Open-Meteo](https://open-meteo.com) (no key). It is off
+until you tap it; coordinates are rounded to about 1 km and results are cached
+for 15 minutes on the device (`src/lib/weather.js`).
+
 ## Run
 
 ```bash
@@ -46,6 +66,13 @@ Everything lives in a persisted Zustand store (`src/store.js`, localStorage key
 snapshot the day's exercises when started, so editing a plan never breaks a
 session in progress. Timers store an absolute end time, so they keep counting
 while you're on another screen or the tab is in the background.
+
+## Security
+
+`server.mjs` serves the build with a strict Content-Security-Policy (the page
+can only connect to itself, Open-Meteo and OpenRouter), HSTS, `nosniff`,
+`frame-ancestors 'none'` and a Permissions-Policy that allows location only
+for this site. Fonts are self-hosted, so no third-party font requests.
 
 ## Exercise library
 

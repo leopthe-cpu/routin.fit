@@ -2,7 +2,7 @@ import { Check, Clock, Play } from 'lucide-react';
 
 const STATUS_STYLE = {
   todo: null,
-  progress: { label: 'In progress', color: '#22d3ee' },
+  progress: { label: 'In progress', color: 'var(--accent)' },
   done: { label: 'Done', color: '#4ade80' },
   partial: { label: 'Ended early', color: '#fbbf24' },
 };
@@ -20,7 +20,7 @@ export default function DayCard({ icon: Icon, accent, title, subtitle, detail, m
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{
-            background: done ? 'rgba(34,197,94,0.18)' : partial ? 'rgba(251,191,36,0.15)' : `${accent}22`,
+            background: done ? 'rgba(34,197,94,0.18)' : partial ? 'rgba(251,191,36,0.15)' : 'rgb(var(--ink-rgb) / 0.07)',
             color: done ? '#4ade80' : partial ? '#fbbf24' : accent,
           }}
         >
@@ -29,7 +29,7 @@ export default function DayCard({ icon: Icon, accent, title, subtitle, detail, m
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-[15px] font-semibold">{title}</h3>
-            <span className="pill shrink-0" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-2)' }}>
+            <span className="pill shrink-0" style={{ background: 'rgb(var(--ink-rgb) / 0.08)', color: 'var(--text-2)' }}>
               <Clock className="h-3 w-3" />≈ {minutes} min
             </span>
           </div>
@@ -44,10 +44,10 @@ export default function DayCard({ icon: Icon, accent, title, subtitle, detail, m
             ) : (
               <span
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                style={{ background: 'linear-gradient(135deg,#6366f1,#06b6d4)' }}
+                style={{ background: 'var(--accent-grad)', color: 'var(--on-accent)' }}
                 aria-hidden="true"
               >
-                <Play className="ml-0.5 h-3.5 w-3.5" fill="white" />
+                <Play className="ml-0.5 h-3.5 w-3.5" fill="currentColor" />
               </span>
             )}
           </div>

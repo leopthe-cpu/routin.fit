@@ -66,6 +66,20 @@ export function sessionProgress(session) {
   return { done, total };
 }
 
+/** 'todo' | 'progress' | 'done' | 'partial' (ended before every set was ticked). */
+export function sessionStatus(session) {
+  if (!session) return 'todo';
+  if (!session.endedAt) return 'progress';
+  const { done, total } = sessionProgress(session);
+  return done >= total ? 'done' : 'partial';
+}
+
+/** Whole seconds left on a timer, counting a paused timer as stopped. */
+export function timerLeft(timer, now = Date.now()) {
+  if (!timer) return 0;
+  return Math.max(0, Math.ceil((timer.endsAt - (timer.pausedAt ?? now)) / 1000));
+}
+
 const initialPlan = makePlan(DEFAULT_PLAN_NAME, DEFAULT_PLAN_TEXT);
 
 export const useStore = create(
@@ -77,7 +91,22 @@ export const useStore = create(
       activeSessionKey: null,
       // { endsAt, total, label, sessionKey, complete?: { itemId, setIndex } }
       timer: null,
-      settings: { openrouterKey: '', openrouterModel: '', unit: 'kg' },
+      settings: {
+        openrouterKey: '',
+        openrouterModel: '',
+        unit: 'kg',
+        name: '',
+        // 'on' once the user has asked for weather (it needs location permission).
+        weather: 'off',
+        tempUnit: 'celsius',
+        music: true,
+      },
+      // Index of the greeting phrase shown last, so the next visit gets a new one.
+      lastPhrase: -1,
+      // Simple recurring goals shown on Today: { id, title, days: ['Mon', …] }.
+      goals: [],
+      // Goal ticks per day: { 'YYYY-MM-DD|goalId': true }.
+      goalChecks: {},
       // Current working weight per exercise key: { value, unit, updatedAt }. Stays until changed.
       weights: {},
       // Imported past workouts: [{ date, key, name, sets: [{ value, unit }] }]
@@ -99,6 +128,21 @@ export const useStore = create(
         }),
       setActivePlan: (id) => set({ activePlanId: id }),
       setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+      setLastPhrase: (i) => set({ lastPhrase: i }),
+
+      addGoal: (title, days) =>
+        set((s) => ({
+          goals: [...s.goals, { id: `goal-${Date.now().toString(36)}`, title, days }],
+        })),
+      deleteGoal: (id) => set((s) => ({ goals: s.goals.filter((g) => g.id !== id) })),
+      toggleGoal: (date, id) =>
+        set((s) => {
+          const goalChecks = { ...s.goalChecks };
+          const k = `${date}|${id}`;
+          if (goalChecks[k]) delete goalChecks[k];
+          else goalChecks[k] = true;
+          return { goalChecks };
+        }),
 
       setWeight: (key, value, unit) =>
         set((s) => ({
@@ -123,7 +167,10 @@ export const useStore = create(
           const ids = new Set(s.plans.map((p) => p.id));
           const plans = [...s.plans, ...(data.plans ?? []).filter((p) => !ids.has(p.id))];
           const sessions = { ...(data.sessions ?? {}), ...s.sessions };
-          return { weights, history, plans, sessions };
+          const goalIds = new Set(s.goals.map((g) => g.id));
+          const goals = [...s.goals, ...(data.goals ?? []).filter((g) => !goalIds.has(g.id))];
+          const goalChecks = { ...(data.goalChecks ?? {}), ...s.goalChecks };
+          return { weights, history, plans, sessions, goals, goalChecks };
         }),
 
       /** Start (or resume) a session. The day's content is snapshotted so later plan edits don't break it. */
@@ -225,6 +272,20 @@ export const useStore = create(
         });
       },
 
+      /** Freeze the timer; resuming shifts its end (and switch cue) by the time spent paused. */
+      pauseTimer: () =>
+        set((s) => (s.timer && !s.timer.pausedAt ? { timer: { ...s.timer, pausedAt: Date.now() } } : {})),
+      resumeTimer: () =>
+        set((s) => {
+          if (!s.timer?.pausedAt) return {};
+          const shift = Date.now() - s.timer.pausedAt;
+          const rest = { ...s.timer };
+          delete rest.pausedAt;
+          return {
+            timer: { ...rest, endsAt: rest.endsAt + shift, switchAt: rest.switchAt ? rest.switchAt + shift : rest.switchAt },
+          };
+        }),
+
       adjustTimer: (deltaSeconds) =>
         set((s) =>
           s.timer ? { timer: { ...s.timer, endsAt: s.timer.endsAt + deltaSeconds * 1000, total: s.timer.total + deltaSeconds } } : {},
@@ -315,6 +376,9 @@ export const useStore = create(
         settings: s.settings,
         weights: s.weights,
         history: s.history,
+        lastPhrase: s.lastPhrase,
+        goals: s.goals,
+        goalChecks: s.goalChecks,
       }),
     },
   ),

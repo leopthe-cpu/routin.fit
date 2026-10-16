@@ -1,17 +1,10 @@
 import { ChevronLeft, ChevronRight, Dumbbell, Moon, Sun } from 'lucide-react';
-import { useStore, sessionKey, sessionProgress } from '../store';
+import { useStore, sessionKey, sessionProgress, sessionStatus as statusOf } from '../store';
 import { weekDates, todayISO, planWeek, fromISODate } from '../lib/dates';
 import { morningCopy, workoutCopy } from '../lib/estimate';
 import DayCard from '../components/DayCard';
 
 const LONG_DAY = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
-
-function statusOf(session) {
-  if (!session) return 'todo';
-  if (!session.endedAt) return 'progress';
-  const { done, total } = sessionProgress(session);
-  return done >= total ? 'done' : 'partial';
-}
 
 export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
   const plan = useStore((s) => s.activePlan());
@@ -52,7 +45,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
       <DayCard
         key={kind}
         icon={kind === 'morning' ? Sun : Dumbbell}
-        accent={kind === 'morning' ? '#818cf8' : '#22d3ee'}
+        accent={kind === 'morning' ? 'var(--accent)' : 'var(--accent)'}
         {...copy}
         status={status}
         progressText={status === 'progress' || status === 'partial' ? `${done}/${total}` : ''}
@@ -90,8 +83,8 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
                 onClick={() => onSelectDate(w.iso)}
                 className="flex flex-col items-center rounded-xl py-2 transition"
                 style={{
-                  background: isSel ? 'linear-gradient(135deg, rgba(99,102,241,0.35), rgba(6,182,212,0.35))' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${isSel ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                  background: isSel ? 'rgb(var(--ink-rgb) / 0.12)' : 'rgb(var(--ink-rgb) / 0.04)',
+                  border: `1px solid ${isSel ? 'rgb(var(--ink-rgb) / 0.25)' : 'rgb(var(--ink-rgb) / 0.06)'}`,
                 }}
               >
                 <span className={`text-[11px] ${w.iso === today ? 'font-bold text-white' : 'text-3'}`}>{w.key}</span>
@@ -99,7 +92,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
                 <span
                   className="mt-1 h-1.5 w-1.5 rounded-full"
                   style={{
-                    background: st === 'done' ? '#4ade80' : st === 'partial' ? '#fbbf24' : st === 'progress' ? '#22d3ee' : plan.days[w.key].isRest ? 'transparent' : 'rgba(255,255,255,0.2)',
+                    background: st === 'done' ? '#4ade80' : st === 'partial' ? '#fbbf24' : st === 'progress' ? 'var(--accent)' : plan.days[w.key].isRest ? 'transparent' : 'rgb(var(--ink-rgb) / 0.2)',
                   }}
                 />
               </button>
@@ -117,7 +110,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
         {day.exercises.length === 0 && (
           <div className="glass p-4">
             <div className="flex items-center gap-2">
-              <Moon className="h-4 w-4" style={{ color: '#818cf8' }} />
+              <Moon className="h-4 w-4" style={{ color: 'var(--accent)' }} />
               <h3 className="text-[15px] font-semibold">Rest & recover</h3>
             </div>
             {day.notes.length > 0 ? (

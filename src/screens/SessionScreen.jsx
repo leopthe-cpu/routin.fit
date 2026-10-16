@@ -44,11 +44,11 @@ function Elapsed({ since }) {
 }
 
 const dotStyle = (on) => ({
-  background: on ? 'rgba(34,197,94,0.9)' : 'rgba(255,255,255,0.06)',
-  border: `1px solid ${on ? 'rgba(74,222,128,0.9)' : 'rgba(255,255,255,0.15)'}`,
+  background: on ? 'rgba(34,197,94,0.9)' : 'rgb(var(--ink-rgb) / 0.06)',
+  border: `1px solid ${on ? 'rgba(74,222,128,0.9)' : 'rgb(var(--ink-rgb) / 0.15)'}`,
 });
 
-const playStyle = { background: 'linear-gradient(135deg,#6366f1,#06b6d4)', border: '1px solid rgba(255,255,255,0.25)' };
+const playStyle = { background: 'var(--accent-grad)', color: 'var(--on-accent)', border: '1px solid rgb(var(--ink-rgb) / 0.25)' };
 
 function SetDots({ count, done, disabled, playFirst, onToggle }) {
   return (
@@ -65,7 +65,7 @@ function SetDots({ count, done, disabled, playFirst, onToggle }) {
             className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition disabled:opacity-40"
             style={play ? playStyle : dotStyle(on)}
           >
-            {on ? <Check className="h-4 w-4" strokeWidth={3} /> : play ? <Play className="ml-0.5 h-4 w-4" fill="white" /> : i + 1}
+            {on ? <Check className="h-4 w-4" strokeWidth={3} /> : play ? <Play className="ml-0.5 h-4 w-4" fill="currentColor" /> : i + 1}
           </button>
         );
       })}
@@ -139,9 +139,9 @@ function MoveCard({ name, index, on, timing, seconds, finished, playable, onTick
             onClick={onPlay}
             aria-label={`Start ${title} timer`}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-            style={timing ? { background: 'rgba(6,182,212,0.3)', border: '1px solid rgba(34,211,238,0.6)' } : playStyle}
+            style={timing ? { background: 'rgb(var(--ink-rgb) / 0.12)', border: '1px solid var(--accent)' } : playStyle}
           >
-            <Play className="ml-0.5 h-4 w-4" fill="white" />
+            <Play className="ml-0.5 h-4 w-4" fill="currentColor" />
           </button>
         )}
       </div>
@@ -229,12 +229,12 @@ export default function SessionScreen({ date, kind, onBack }) {
         )}
         {session && (
           <div className="mt-3">
-            <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'rgb(var(--ink-rgb) / 0.08)' }}>
               <div
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${total ? (done / total) * 100 : 0}%`,
-                  background: finished ? (done >= total ? '#22c55e' : '#fbbf24') : 'linear-gradient(90deg, #6366f1, #06b6d4)',
+                  background: finished ? (done >= total ? '#22c55e' : '#fbbf24') : 'var(--accent-grad)',
                 }}
               />
             </div>
@@ -282,8 +282,8 @@ export default function SessionScreen({ date, kind, onBack }) {
             ));
             return block.group && block.exercises.length > 1 ? (
               <div key={bi} className="relative pl-4">
-                <div className="absolute bottom-3 left-0 top-3 w-1 rounded-full" style={{ background: 'linear-gradient(#6366f1, #06b6d4)' }} />
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: '#22d3ee' }}>
+                <div className="absolute bottom-3 left-0 top-3 w-1 rounded-full" style={{ background: 'var(--accent-grad)' }} />
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
                   Superset {block.group} · rest {restSecondsFor(block.exercises[0])} s after both
                 </p>
                 <div className="space-y-2">{cards}</div>

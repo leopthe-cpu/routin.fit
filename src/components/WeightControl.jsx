@@ -52,7 +52,7 @@ export default function WeightControl({ name, planWeight }) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && commit(draft)}
           aria-label={`Weight in ${unit}`}
-          className="w-16 rounded-lg bg-white/10 px-2 py-1 text-center text-sm font-semibold outline-none ring-1 ring-white/15 focus:ring-indigo-400"
+          className="w-16 rounded-lg bg-white/10 px-2 py-1 text-center text-sm font-semibold outline-none ring-1 ring-white/15 focus:ring-white/40"
         />
         <span className="text-xs text-2">{unit}</span>
         <button onClick={() => nudge(JUMP[unit])} aria-label="Heavier" className="btn-ghost p-1.5">
@@ -71,7 +71,7 @@ export default function WeightControl({ name, planWeight }) {
         <button
           onClick={open}
           className="pill"
-          style={{ background: 'transparent', border: '1px dashed rgba(129,140,248,0.6)', color: '#c7d2fe' }}
+          style={{ background: 'transparent', border: '1px dashed var(--text-3)', color: 'var(--accent)' }}
         >
           ≈ {formatWeight(current, unit)}
         </button>
@@ -82,7 +82,7 @@ export default function WeightControl({ name, planWeight }) {
 
   if (current != null) {
     return (
-      <button onClick={open} className="pill" style={{ background: 'rgba(99,102,241,0.18)', color: '#c7d2fe' }}>
+      <button onClick={open} className="pill" style={{ background: 'rgb(var(--ink-rgb) / 0.07)', color: 'var(--accent)' }}>
         {formatWeight(current, unit)}
       </button>
     );
@@ -95,7 +95,7 @@ export default function WeightControl({ name, planWeight }) {
           <button
             onClick={() => setWeight(key, suggestion.value, unit)}
             className="pill"
-            style={{ background: 'transparent', border: '1px dashed rgba(129,140,248,0.6)', color: '#c7d2fe' }}
+            style={{ background: 'transparent', border: '1px dashed var(--text-3)', color: 'var(--accent)' }}
           >
             <Sparkles className="h-3 w-3" /> Try {formatWeight(suggestion.value, unit)}
           </button>
@@ -113,7 +113,7 @@ export default function WeightControl({ name, planWeight }) {
   }
 
   return (
-    <button onClick={open} className="pill" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-2)' }}>
+    <button onClick={open} className="pill" style={{ background: 'rgb(var(--ink-rgb) / 0.08)', color: 'var(--text-2)' }}>
       {bodyweight ? 'Bodyweight · add' : '+ Set weight'}
     </button>
   );

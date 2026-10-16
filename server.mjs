@@ -20,6 +20,33 @@ const TYPES = {
   '.ico': 'image/x-icon',
 };
 
+// Security headers on every response. The app only talks to itself, Open-Meteo
+// (weather) and OpenRouter (optional AI plan import, with the user's own key).
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self' https://api.open-meteo.com https://openrouter.ai",
+  "manifest-src 'self'",
+  "worker-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': CSP,
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'geolocation=(self), camera=(), microphone=(), payment=(), usb=()',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
 async function resolveFile(urlPath) {
   const safe = normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[/\\])+/, '');
   const candidate = join(root, safe);
@@ -34,6 +61,10 @@ async function resolveFile(urlPath) {
 }
 
 createServer(async (req, res) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { Allow: 'GET, HEAD', ...SECURITY_HEADERS }).end();
+    return;
+  }
   try {
     const { pathname } = new URL(req.url, 'http://localhost');
     const file = await resolveFile(pathname);
@@ -43,9 +74,9 @@ createServer(async (req, res) => {
     res.writeHead(200, {
       'Content-Type': TYPES[ext] ?? 'application/octet-stream',
       'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
-      'X-Content-Type-Options': 'nosniff',
+      ...SECURITY_HEADERS,
     });
-    res.end(body);
+    res.end(req.method === 'HEAD' ? undefined : body);
   } catch {
     res.writeHead(500).end('Server error');
   }

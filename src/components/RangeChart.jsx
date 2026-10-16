@@ -72,25 +72,25 @@ export default function RangeChart({ points, unit, label }) {
       >
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" />
-            <text x={PAD.left - 6} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="rgba(255,255,255,0.35)">
+            <line x1={PAD.left} x2={W - PAD.right} y1={y(t)} y2={y(t)} stroke="rgb(var(--ink-rgb) / 0.06)" />
+            <text x={PAD.left - 6} y={y(t) + 3.5} textAnchor="end" fontSize="10" fill="rgb(var(--ink-rgb) / 0.35)">
               {t}
             </text>
           </g>
         ))}
-        <line x1={PAD.left} x2={W - PAD.right} y1={H - PAD.bottom} y2={H - PAD.bottom} stroke="rgba(255,255,255,0.18)" />
+        <line x1={PAD.left} x2={W - PAD.right} y1={H - PAD.bottom} y2={H - PAD.bottom} stroke="rgb(var(--ink-rgb) / 0.18)" />
         {shown.map((p, i) => {
           const latest = i === shown.length - 1;
           const isActive = i === active;
           return (
             <g key={p.date}>
-              <line x1={x(i)} x2={x(i)} y1={H - PAD.bottom} y2={H - PAD.bottom + 4} stroke="rgba(255,255,255,0.18)" />
+              <line x1={x(i)} x2={x(i)} y1={H - PAD.bottom} y2={H - PAD.bottom + 4} stroke="rgb(var(--ink-rgb) / 0.18)" />
               <line
                 x1={x(i)}
                 x2={x(i)}
                 y1={y(p.hi)}
                 y2={y(p.lo)}
-                stroke={latest ? '#22d3ee' : isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)'}
+                stroke={latest ? 'var(--accent)' : isActive ? 'rgb(var(--ink-rgb) / 0.95)' : 'rgb(var(--ink-rgb) / 0.55)'}
                 strokeWidth={barW}
                 strokeLinecap="round"
               />
@@ -104,7 +104,7 @@ export default function RangeChart({ points, unit, label }) {
             y={H - 6}
             textAnchor={i === 0 && shown.length > 1 ? 'start' : i === shown.length - 1 && shown.length > 1 ? 'end' : 'middle'}
             fontSize="10"
-            fill="rgba(255,255,255,0.45)"
+            fill="rgb(var(--ink-rgb) / 0.45)"
           >
             {shortDate(shown[i].date).toUpperCase()}
           </text>

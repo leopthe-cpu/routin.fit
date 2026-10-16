@@ -41,14 +41,14 @@ function PlanEditor({ initial, onCancel, onSave }) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Plan name"
-        className="w-full rounded-xl bg-white/5 px-3 py-2.5 text-sm outline-none ring-1 ring-white/10 focus:ring-indigo-400"
+        className="w-full rounded-xl bg-white/5 px-3 py-2.5 text-sm outline-none ring-1 ring-white/10 focus:ring-white/40"
       />
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={EXAMPLE}
         rows={12}
-        className="w-full rounded-xl bg-white/5 px-3 py-2.5 font-mono text-xs leading-relaxed outline-none ring-1 ring-white/10 focus:ring-indigo-400"
+        className="w-full rounded-xl bg-white/5 px-3 py-2.5 font-mono text-xs leading-relaxed outline-none ring-1 ring-white/10 focus:ring-white/40"
       />
 
       {text.trim() && (
@@ -76,7 +76,7 @@ function PlanEditor({ initial, onCancel, onSave }) {
       )}
 
       {(weak || aiError) && (
-        <div className="rounded-xl p-3 text-xs" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)' }}>
+        <div className="rounded-xl p-3 text-xs" style={{ background: 'rgb(var(--ink-rgb) / 0.04)', border: '1px solid var(--line)' }}>
           {weak && <p className="text-2">Couldn't find days and exercises in this text. Let AI restructure it?</p>}
           {aiError && <p className="mt-1 text-red-300">{aiError}</p>}
           <button onClick={runAI} disabled={aiBusy} className="btn-ghost mt-2 flex items-center gap-2 px-3 py-1.5">
@@ -118,7 +118,7 @@ export default function PlansScreen() {
           <p className="font-semibold">Weight unit</p>
           <p className="text-xs text-3">Saved weights convert automatically.</p>
         </div>
-        <div className="flex rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.06)' }} role="radiogroup" aria-label="Weight unit">
+        <div className="flex rounded-xl p-1" style={{ background: 'rgb(var(--ink-rgb) / 0.06)' }} role="radiogroup" aria-label="Weight unit">
           {['kg', 'lb'].map((u) => (
             <button
               key={u}
@@ -126,7 +126,7 @@ export default function PlansScreen() {
               aria-checked={settings.unit === u}
               onClick={() => setSettings({ unit: u })}
               className="rounded-lg px-4 py-1.5 text-sm font-semibold"
-              style={settings.unit === u ? { background: 'linear-gradient(135deg,#6366f1,#06b6d4)' } : { color: 'var(--text-2)' }}
+              style={settings.unit === u ? { background: 'var(--accent-grad)', color: 'var(--on-accent)' } : { color: 'var(--text-2)' }}
             >
               {u}
             </button>
@@ -153,8 +153,9 @@ export default function PlansScreen() {
                 aria-label={`Use ${p.name}`}
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
                 style={{
-                  background: p.id === activePlanId ? 'linear-gradient(135deg,#6366f1,#06b6d4)' : 'transparent',
-                  border: '1px solid rgba(255,255,255,0.25)',
+                  background: p.id === activePlanId ? 'var(--accent-grad)' : 'transparent',
+                  color: 'var(--on-accent)',
+                  border: '1px solid rgb(var(--ink-rgb) / 0.25)',
                 }}
               >
                 {p.id === activePlanId && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
