@@ -8,7 +8,9 @@ const LONG_DAY = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursd
 
 function statusOf(session) {
   if (!session) return 'todo';
-  return session.endedAt ? 'done' : 'progress';
+  if (!session.endedAt) return 'progress';
+  const { done, total } = sessionProgress(session);
+  return done >= total ? 'done' : 'partial';
 }
 
 export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
@@ -27,6 +29,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
     const kinds = [day.morning && 'morning', day.exercises.length && 'workout'].filter(Boolean);
     const states = kinds.map((k) => statusOf(sessions[sessionKey(iso, k)]));
     if (states.length && states.every((s) => s === 'done')) return 'done';
+    if (states.length && states.every((s) => s === 'done' || s === 'partial')) return 'partial';
     if (states.some((s) => s !== 'todo')) return 'progress';
     return 'todo';
   };
@@ -52,7 +55,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
         accent={kind === 'morning' ? '#818cf8' : '#22d3ee'}
         {...copy}
         status={status}
-        progressText={status === 'progress' ? `${done}/${total}` : ''}
+        progressText={status === 'progress' || status === 'partial' ? `${done}/${total}` : ''}
         onClick={() => onOpenSession(selectedDate, kind)}
       />
     );
@@ -96,7 +99,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
                 <span
                   className="mt-1 h-1.5 w-1.5 rounded-full"
                   style={{
-                    background: st === 'done' ? '#4ade80' : st === 'progress' ? '#22d3ee' : plan.days[w.key].isRest ? 'transparent' : 'rgba(255,255,255,0.2)',
+                    background: st === 'done' ? '#4ade80' : st === 'partial' ? '#fbbf24' : st === 'progress' ? '#22d3ee' : plan.days[w.key].isRest ? 'transparent' : 'rgba(255,255,255,0.2)',
                   }}
                 />
               </button>

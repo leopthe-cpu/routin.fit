@@ -131,13 +131,13 @@ export default function SessionScreen({ date, kind, onBack }) {
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${total ? (done / total) * 100 : 0}%`,
-                  background: finished ? '#22c55e' : 'linear-gradient(90deg, #6366f1, #06b6d4)',
+                  background: finished ? (done >= total ? '#22c55e' : '#fbbf24') : 'linear-gradient(90deg, #6366f1, #06b6d4)',
                 }}
               />
             </div>
             <p className="mt-1 text-xs text-3">
               {finished
-                ? `Completed at ${new Date(session.endedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                ? `${done >= total ? 'Completed' : `Ended early · ${done}/${total}`} at ${new Date(session.endedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                 : `${done} of ${total} done`}
             </p>
           </div>

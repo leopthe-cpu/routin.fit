@@ -8,3 +8,14 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 );
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // offline support is optional; the app works without it
+    });
+  });
+}
+
+// Ask the browser not to clear saved progress under storage pressure (best effort).
+navigator.storage?.persist?.().catch(() => {});

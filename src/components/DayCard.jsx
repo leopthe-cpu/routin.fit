@@ -4,25 +4,27 @@ const STATUS_STYLE = {
   todo: null,
   progress: { label: 'In progress', color: '#22d3ee' },
   done: { label: 'Done', color: '#4ade80' },
+  partial: { label: 'Ended early', color: '#fbbf24' },
 };
 
 export default function DayCard({ icon: Icon, accent, title, subtitle, detail, minutes, status, progressText, onClick }) {
   const done = status === 'done';
+  const partial = status === 'partial';
   const s = STATUS_STYLE[status];
   return (
     <button
       onClick={onClick}
-      className={`glass ${done ? 'glass-done' : ''} w-full p-4 text-left transition active:scale-[0.99]`}
+      className={`glass ${done ? 'glass-done' : partial ? 'glass-partial' : ''} w-full p-4 text-left transition active:scale-[0.99]`}
     >
       <div className="flex items-start gap-3">
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{
-            background: done ? 'rgba(34,197,94,0.18)' : `${accent}22`,
-            color: done ? '#4ade80' : accent,
+            background: done ? 'rgba(34,197,94,0.18)' : partial ? 'rgba(251,191,36,0.15)' : `${accent}22`,
+            color: done ? '#4ade80' : partial ? '#fbbf24' : accent,
           }}
         >
-          {done ? <Check className="h-5 w-5" strokeWidth={3} /> : <Icon className="h-5 w-5" />}
+          {done || partial ? <Check className="h-5 w-5" strokeWidth={3} /> : <Icon className="h-5 w-5" />}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
@@ -35,7 +37,7 @@ export default function DayCard({ icon: Icon, accent, title, subtitle, detail, m
           <div className="mt-2 flex items-center justify-between gap-2 text-xs">
             <span className="text-3">{detail}</span>
             {s ? (
-              <span className="font-semibold" style={{ color: s.color }}>
+              <span className="shrink-0 whitespace-nowrap font-semibold" style={{ color: s.color }}>
                 {s.label}
                 {progressText ? ` · ${progressText}` : ''}
               </span>

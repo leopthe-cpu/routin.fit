@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "library": "node scripts/library/build.mjs"
+    "library": "node scripts/library/build.mjs",
+    "start": "node server.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.475.0",
@@ -32,5 +33,8 @@
     "tailwindcss": "^3.4.17",
     "vite": "^6.0.3",
     "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
