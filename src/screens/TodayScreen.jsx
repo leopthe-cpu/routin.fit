@@ -47,8 +47,8 @@ function Clock({ now }) {
     .join('')
     .trim();
   return (
-    <div className="mt-1 flex items-baseline gap-1.5">
-      <span className="text-[52px] font-normal leading-none tracking-tight tabular-nums">{time}</span>
+    <div className="-mt-1 flex shrink-0 items-baseline gap-1.5">
+      <span className="today-clock font-normal leading-none tracking-tight tabular-nums">{time}</span>
       {period && <span className="text-xl text-3">{period.toLowerCase()}</span>}
     </div>
   );
@@ -63,7 +63,7 @@ function Tile({ label, value, sub, status, icon, tint, onClick, ariaLabel, disab
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="tile flex min-h-[104px] flex-col justify-between gap-2.5 rounded-[18px] px-3.5 py-3 text-left disabled:opacity-60"
+      className="tile today-tile flex min-h-0 flex-col justify-between overflow-hidden rounded-[18px] text-left disabled:opacity-60"
       style={{
         background: `radial-gradient(120% 110% at 100% 0%, ${tint}3D 0%, ${tint}00 60%), var(--card-bg)`,
         border: '1px solid var(--card-border)',
@@ -89,7 +89,7 @@ function Tile({ label, value, sub, status, icon, tint, onClick, ariaLabel, disab
         </span>
       </span>
       <span className="flex w-full flex-col gap-0.5">
-        <span className="text-[18px] leading-tight">{value}</span>
+        <span className="today-tile-value truncate leading-tight">{value}</span>
         <span className="flex items-baseline justify-between gap-1.5">
           <span className="truncate text-xs text-3">{sub}</span>
           <span className="label shrink-0 text-[9px] text-2">{status}</span>
@@ -125,19 +125,19 @@ function weekProgress(plan, sessions, now) {
 function WeekBar({ plan, sessions, now, sky }) {
   const { planned, workouts, stretches, pct } = weekProgress(plan, sessions, now);
   return (
-    <div className="mt-4 flex flex-col gap-2">
+    <div className="mt-auto flex shrink-0 flex-col gap-1.5">
       <div className="label flex justify-between text-2">
         <span>This week</span>
         <span>
           {workouts + stretches} of {planned} sessions
         </span>
       </div>
-      <div className="relative h-[54px] overflow-hidden rounded-[14px]" style={{ background: 'var(--track)' }}>
+      <div className="today-week relative overflow-hidden rounded-[14px]" style={{ background: 'var(--track)' }}>
         <div
           className="absolute inset-y-0 left-0 rounded-[14px] transition-[width] duration-700"
           style={{ width: `${pct}%`, background: sky.bar }}
         />
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-3xl" style={{ color: pct > 12 ? '#16161a' : 'var(--text-1)' }}>
+        <span className="today-week-pct absolute left-4 top-1/2 -translate-y-1/2" style={{ color: pct > 12 ? '#16161a' : 'var(--text-1)' }}>
           {pct}
           <span className="text-[13px] opacity-60">%</span>
         </span>
@@ -156,8 +156,7 @@ function Goals({ date, dayKey }) {
   const today = goals.filter((g) => g.days.includes(dayKey));
   if (!today.length) return null;
   return (
-    <div className="mt-4 flex flex-col gap-2">
-      <span className="label text-2">Goals today</span>
+    <div className="flex max-h-9 shrink-0 flex-wrap gap-1.5 overflow-hidden" aria-label="Goals today">
       {today.map((g) => {
         const on = !!checks[`${date}|${g.id}`];
         return (
@@ -165,7 +164,7 @@ function Goals({ date, dayKey }) {
             key={g.id}
             onClick={() => toggleGoal(date, g.id)}
             aria-pressed={on}
-            className="tile flex min-h-[48px] items-center gap-3 rounded-[14px] px-3.5 text-left"
+            className="tile flex h-9 max-w-full items-center gap-2 rounded-full pl-1.5 pr-3.5 text-left text-sm"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
           >
             <span
@@ -174,7 +173,7 @@ function Goals({ date, dayKey }) {
             >
               {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
             </span>
-            <span className={on ? 'text-3 line-through' : ''}>{g.title}</span>
+            <span className={`truncate ${on ? 'text-3 line-through' : ''}`}>{g.title}</span>
           </button>
         );
       })}
@@ -205,8 +204,9 @@ export default function TodayScreen({ now, sky, onOpen }) {
     : [day.morning && 'Stretch', day.exercises.length ? day.title : 'Rest day'].filter(Boolean).join(', then ');
 
   return (
-    <div className="flex flex-col">
-      <div className="flex items-start justify-between gap-3">
+    // Sized to the screen: the tiles take whatever height is left, so Today never scrolls.
+    <div className="today-stack flex h-full flex-col">
+      <div className="flex shrink-0 items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="label text-[12px]" style={{ color: 'var(--text-1)' }}>
             {date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -218,7 +218,7 @@ export default function TodayScreen({ now, sky, onOpen }) {
       <Clock now={now} />
 
       {day && (
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2.5" style={{ maxHeight: 280 }}>
           <Tile
             label="Stretch"
             value={day.morning ? 'Morning flow' : 'Not planned'}

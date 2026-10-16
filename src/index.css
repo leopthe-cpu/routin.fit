@@ -149,15 +149,74 @@ body {
 
 /* The app fills the screen; the sky takes about the top third. */
 :root {
-  --sky-h: clamp(250px, 36vh, 340px);
+  --sky-h: clamp(160px, 32vh, 320px);
   --sky-band: calc(env(safe-area-inset-top) + 56px);
+  --vh: 1vh;
 }
 @supports (height: 1dvh) {
   :root {
-    --sky-h: clamp(250px, 36dvh, 340px);
+    --sky-h: clamp(160px, 32dvh, 320px);
+    --vh: 1dvh;
+  }
+}
+
+/*
+ * Today never scrolls: spacing and type scale with the screen height, and the
+ * tiles take whatever room is left (see TodayScreen).
+ */
+.today-stack {
+  gap: clamp(6px, calc(1.6 * var(--vh)), 16px);
+  padding-top: clamp(10px, calc(2.2 * var(--vh)), 22px);
+  padding-bottom: clamp(6px, calc(1.4 * var(--vh)), 14px);
+}
+.today-clock {
+  font-size: clamp(32px, calc(6.4 * var(--vh)), 56px);
+}
+.today-tile {
+  padding: clamp(8px, calc(1.4 * var(--vh)), 13px) 14px;
+  gap: 4px;
+}
+.today-tile-value {
+  font-size: clamp(15px, calc(2.2 * var(--vh)), 19px);
+}
+.today-week {
+  height: clamp(38px, calc(6.2 * var(--vh)), 54px);
+}
+.today-week-pct {
+  font-size: clamp(20px, calc(3.6 * var(--vh)), 30px);
+}
+.greeting {
+  font-size: clamp(19px, calc(3.2 * var(--vh)), 27px);
+}
+/* Very short screens: drop the second line in tiles and the sky dots. */
+@media (max-height: 640px) {
+  .today-tile .truncate.text-xs {
+    display: none;
+  }
+  .sky-dots {
+    display: none;
   }
 }
 .app-h {
   height: 100vh;
   height: 100dvh;
+}
+
+/* 3-2-1 before a session starts: each number pops in and fades. */
+@keyframes count-pop {
+  0% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.15;
+    transform: scale(0.92);
+  }
+}
+.count-pop {
+  animation: count-pop 1s ease-out both;
 }

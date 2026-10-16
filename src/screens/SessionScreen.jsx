@@ -149,7 +149,7 @@ function MoveCard({ name, index, on, timing, seconds, finished, playable, onTick
   );
 }
 
-export default function SessionScreen({ date, kind, onBack }) {
+export default function SessionScreen({ date, kind, onBack, embedded = false }) {
   const plan = useStore((s) => s.activePlan());
   const key = sessionKey(date, kind);
   const session = useStore((s) => s.sessions[key]);
@@ -200,28 +200,35 @@ export default function SessionScreen({ date, kind, onBack }) {
 
   return (
     <div className="space-y-5 pb-4">
-      <BackButton
-        onBack={onBack}
-        label={dayDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
-      />
+      {!embedded && (
+        <BackButton
+          onBack={onBack}
+          label={dayDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
+        />
+      )}
 
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-wider text-3">
-          {isMorning ? 'Morning routine' : "Today's workout"}
-        </p>
-        <h1 className="mt-1 text-2xl font-bold">{content.title}</h1>
-        <p className="text-sm text-2">
-          ≈ {minutes} min · {shownTotal} {isMorning ? 'moves' : 'sets'}
-          {started && (
-            <>
-              {' · '}
-              <span className="text-white">
-                <Elapsed since={session.startedAt} />
-              </span>
-            </>
-          )}
-        </p>
-        {!session && (
+      {/* Embedded in the full-screen view, the title and Start button sit above the list instead. */}
+      <header className={embedded && !session ? 'hidden' : undefined}>
+        {!embedded && (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-wider text-3">
+              {isMorning ? 'Morning routine' : "Today's workout"}
+            </p>
+            <h1 className="mt-1 text-2xl font-bold">{content.title}</h1>
+            <p className="text-sm text-2">
+              ≈ {minutes} min · {shownTotal} {isMorning ? 'moves' : 'sets'}
+              {started && (
+                <>
+                  {' · '}
+                  <span className="text-white">
+                    <Elapsed since={session.startedAt} />
+                  </span>
+                </>
+              )}
+            </p>
+          </>
+        )}
+        {!session && !embedded && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-3">
             <Play className="h-3 w-3" /> Tap the play button to start
             {isMorning ? '; each move flows into the next.' : ' with set 1.'}

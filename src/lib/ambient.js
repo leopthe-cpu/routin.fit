@@ -55,3 +55,21 @@ export function stopAmbient() {
     // already stopped
   }
 }
+
+/** A short soft blip for the 3-2-1 countdown; a higher note on "go". */
+export function blip(high = false) {
+  try {
+    ctx = ctx ?? new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = high ? 880 : 587;
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch {
+    // no audio on this device
+  }
+}

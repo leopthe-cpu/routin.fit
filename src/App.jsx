@@ -130,10 +130,13 @@ export default function App() {
 
   const open = useCallback(
     (kind, opts = {}) => {
-      // Audio has to start inside the tap, so it starts here rather than in the view.
-      if (music && (kind === 'morning' || kind === 'meditate') && !opts.list) startAmbient();
+      // Audio has to start inside a tap. Meditate plays straight away; stretches
+      // start their sound from the Start button.
+      if (music && kind === 'meditate') startAmbient();
       window.history.pushState({ reveal: kind }, '');
-      setReveal({ kind, date: opts.date ?? todayISO(), list: !!opts.list, fromWeek: !!opts.fromWeek });
+      // Stretch and workout open on the day's list; Start counts down into focus.
+      const session = kind === 'morning' || kind === 'workout';
+      setReveal({ kind, date: opts.date ?? todayISO(), list: session, fromWeek: !!opts.fromWeek });
     },
     [music],
   );
@@ -169,17 +172,17 @@ export default function App() {
         <div
           className="absolute inset-x-6 flex flex-col gap-3.5 transition-opacity duration-300"
           style={{
-            top: 'max(3.5rem, calc(env(safe-area-inset-top) + 1.75rem))',
+            top: 'max(clamp(1.5rem, 6dvh, 3.5rem), calc(env(safe-area-inset-top) + 1rem))',
             color: sky.ink,
             opacity: reveal || page !== 0 ? 0 : 1,
           }}
         >
-          <div className="flex gap-2" aria-hidden="true">
+          <div className="sky-dots flex gap-2" aria-hidden="true">
             {sky.dots.map((c) => (
               <span key={c} className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
             ))}
           </div>
-          <p className="max-w-[300px] text-[27px] font-light leading-[1.2] tracking-tight">
+          <p className="greeting max-w-[300px] font-light leading-[1.2] tracking-tight">
             {greeting}
             <br />
             {phrase}
@@ -193,14 +196,14 @@ export default function App() {
         aria-hidden={!!reveal}
       >
         <div ref={pagerRef} onScroll={onPagerScroll} className="no-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
-          <section aria-label="Today" className="no-scrollbar h-full w-full shrink-0 snap-start overflow-y-auto px-5 pb-6 pt-5">
+          <section aria-label="Today" className="today-fit h-full w-full shrink-0 snap-start overflow-hidden px-5">
             <TodayScreen now={now} sky={sky} onOpen={(kind) => open(kind)} />
           </section>
           <section aria-label="Plans" className="no-scrollbar h-full w-full shrink-0 snap-start space-y-6 overflow-y-auto px-5 pb-6 pt-5">
             <WeekScreen
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
-              onOpenSession={(date, kind) => open(kind, { date, list: true, fromWeek: true })}
+              onOpenSession={(date, kind) => open(kind, { date, fromWeek: true })}
             />
             <GoalsSection />
             <PlansScreen />
@@ -243,7 +246,8 @@ export default function App() {
           music={music}
           onToggleMusic={toggleMusic}
           onClose={close}
-          onToggleList={() => setReveal((r) => ({ ...r, list: !r.list }))}
+          onShowList={() => setReveal((r) => ({ ...r, list: true }))}
+          onFocus={() => setReveal((r) => ({ ...r, list: false }))}
         />
       )}
     </div>
