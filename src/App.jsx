@@ -98,7 +98,11 @@ export default function App() {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="orb" style={{ background: orb }} />
-      <main className="relative z-10 mx-auto max-w-md px-4 pb-48 pt-8">
+      <main
+        className="relative z-10 mx-auto max-w-md px-4 pb-48"
+        // Keep content clear of the iPhone status bar / notch when installed full screen.
+        style={{ paddingTop: 'max(2rem, calc(env(safe-area-inset-top) + 1rem))' }}
+      >
         {screen === 'week' && (
           <WeekScreen selectedDate={selectedDate} onSelectDate={setSelectedDate} onOpenSession={openSession} />
         )}

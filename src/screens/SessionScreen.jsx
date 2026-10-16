@@ -327,7 +327,7 @@ export default function SessionScreen({ date, kind, onBack }) {
 
 function BackButton({ onBack, label }) {
   return (
-    <button onClick={onBack} className="-ml-1 flex items-center gap-1 text-sm text-2">
+    <button onClick={onBack} className="-ml-2 flex min-h-[44px] items-center gap-1 px-2 text-sm text-2">
       <ChevronLeft className="h-4 w-4" /> {label}
     </button>
   );
