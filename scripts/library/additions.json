@@ -1,0 +1,313 @@
+{
+  "_note": "Exercises missing from free-exercise-db, written for routin.fit. Fields follow the library format; tags here are set by hand, not by rules.",
+  "exercises": [
+    {
+      "id": "rf_Dead_Hang",
+      "name": "Dead Hang",
+      "category": "strength",
+      "mechanic": "isolation",
+      "force": "static",
+      "level": "beginner",
+      "primaryMuscles": [
+        "forearms"
+      ],
+      "secondaryMuscles": [
+        "lats",
+        "shoulders"
+      ],
+      "pattern": "vertical_pull",
+      "equipment": [
+        "pullup_bar"
+      ],
+      "joints": [
+        "shoulder",
+        "wrist"
+      ],
+      "lengthened": true,
+      "instructions": [
+        "Grip a pull-up bar with hands about shoulder-width apart.",
+        "Lift your feet and hang with straight arms, shoulders relaxed away from the ears.",
+        "Breathe steadily and hold for the target time, then step down with control."
+      ]
+    },
+    {
+      "id": "rf_Neck_Bridge",
+      "name": "Neck Bridge",
+      "category": "strength",
+      "mechanic": "isolation",
+      "force": "static",
+      "level": "expert",
+      "primaryMuscles": [
+        "neck"
+      ],
+      "secondaryMuscles": [
+        "traps"
+      ],
+      "pattern": "neck",
+      "equipment": [],
+      "joints": [
+        "neck"
+      ],
+      "lengthened": false,
+      "instructions": [
+        "Use a padded mat. Start on your back with knees bent and feet flat.",
+        "Press through your feet and lift your hips so part of your weight rests on the top of the head; keep most weight on the feet.",
+        "Hold briefly with a neutral neck, then lower slowly. Stop if you feel any pain."
+      ]
+    },
+    {
+      "id": "rf_Bulgarian_Split_Squat",
+      "name": "Bulgarian Split Squat",
+      "aliases": [
+        "rear foot elevated split squat",
+        "rfess"
+      ],
+      "category": "strength",
+      "mechanic": "compound",
+      "force": "push",
+      "level": "intermediate",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings",
+        "adductors"
+      ],
+      "pattern": "lunge",
+      "equipment": [
+        "bench",
+        "dumbbell"
+      ],
+      "joints": [
+        "ankle",
+        "hip",
+        "knee"
+      ],
+      "lengthened": true,
+      "instructions": [
+        "Stand about a stride in front of a bench and rest the top of your back foot on it.",
+        "Holding dumbbells at your sides, lower your back knee toward the floor.",
+        "Drive through the front foot to stand back up. Finish all reps, then switch legs."
+      ]
+    },
+    {
+      "id": "rf_Dumbbell_Squeeze_Press",
+      "name": "Dumbbell Squeeze Press",
+      "aliases": [
+        "crush press",
+        "hex press"
+      ],
+      "category": "strength",
+      "mechanic": "compound",
+      "force": "push",
+      "level": "beginner",
+      "primaryMuscles": [
+        "chest"
+      ],
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "pattern": "horizontal_push",
+      "equipment": [
+        "bench",
+        "dumbbell"
+      ],
+      "joints": [
+        "elbow",
+        "shoulder",
+        "wrist"
+      ],
+      "lengthened": false,
+      "instructions": [
+        "Lie on a flat bench holding two dumbbells pressed together over your chest, palms facing each other.",
+        "Squeeze the dumbbells together hard and keep squeezing for the whole set.",
+        "Lower them to the chest together, then press back up."
+      ]
+    },
+    {
+      "id": "rf_Chest_Supported_Dumbbell_Row",
+      "name": "Chest-Supported Dumbbell Row",
+      "aliases": [
+        "incline bench dumbbell row",
+        "seal row"
+      ],
+      "category": "strength",
+      "mechanic": "compound",
+      "force": "pull",
+      "level": "beginner",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "lats",
+        "biceps",
+        "shoulders"
+      ],
+      "pattern": "horizontal_pull",
+      "equipment": [
+        "bench",
+        "dumbbell"
+      ],
+      "joints": [
+        "elbow"
+      ],
+      "lengthened": false,
+      "instructions": [
+        "Set a bench to a low incline and lie face down with your chest on the pad.",
+        "Let the dumbbells hang straight down, then row them toward your hips, squeezing the shoulder blades.",
+        "Lower slowly to a full stretch."
+      ]
+    },
+    {
+      "id": "rf_Weighted_Decline_Sit-Up",
+      "name": "Weighted Decline Sit-Up",
+      "category": "strength",
+      "mechanic": "isolation",
+      "force": "pull",
+      "level": "intermediate",
+      "primaryMuscles": [
+        "abdominals"
+      ],
+      "secondaryMuscles": [],
+      "pattern": "core_flexion",
+      "equipment": [
+        "bench",
+        "dumbbell"
+      ],
+      "joints": [
+        "lower_back"
+      ],
+      "lengthened": false,
+      "instructions": [
+        "Hook your feet on a decline bench and hold a plate or dumbbell to your chest.",
+        "Curl your torso up until you're upright, leading with the chest.",
+        "Lower under control without dropping back."
+      ]
+    },
+    {
+      "id": "rf_Overhead_Dumbbell_Triceps_Extension",
+      "name": "Overhead Dumbbell Triceps Extension",
+      "aliases": [
+        "overhead dumbbell extension",
+        "seated overhead dumbbell extension"
+      ],
+      "category": "strength",
+      "mechanic": "isolation",
+      "force": "push",
+      "level": "beginner",
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "secondaryMuscles": [],
+      "pattern": "elbow_extension",
+      "equipment": [
+        "dumbbell"
+      ],
+      "joints": [
+        "elbow",
+        "shoulder"
+      ],
+      "lengthened": true,
+      "instructions": [
+        "Sit or stand holding one dumbbell with both hands over your head.",
+        "Keeping the elbows pointing up, lower the dumbbell behind your head to a deep stretch.",
+        "Straighten the arms to lift it back up."
+      ]
+    },
+    {
+      "id": "rf_Shoulder_Pass-Through",
+      "name": "Shoulder Pass-Through",
+      "aliases": [
+        "shoulder dislocates",
+        "band pass-through",
+        "stick pass-through"
+      ],
+      "category": "stretching",
+      "mechanic": null,
+      "force": null,
+      "level": "beginner",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "chest"
+      ],
+      "pattern": "mobility",
+      "equipment": [
+        "band"
+      ],
+      "joints": [
+        "shoulder"
+      ],
+      "lengthened": true,
+      "instructions": [
+        "Hold a band or stick with a wide grip in front of your hips.",
+        "With straight arms, lift it over your head and behind you as far as is comfortable.",
+        "Bring it back the same way. Use a wider grip if it feels tight."
+      ]
+    },
+    {
+      "id": "rf_90_90_Hip_Switch",
+      "name": "90/90 Hip Switch",
+      "aliases": [
+        "90/90 hip opener",
+        "90 90 hip stretch",
+        "90/90 hip/groin opener"
+      ],
+      "category": "stretching",
+      "mechanic": null,
+      "force": null,
+      "level": "beginner",
+      "primaryMuscles": [
+        "glutes"
+      ],
+      "secondaryMuscles": [
+        "adductors",
+        "abductors"
+      ],
+      "pattern": "mobility",
+      "equipment": [],
+      "joints": [
+        "hip"
+      ],
+      "lengthened": true,
+      "instructions": [
+        "Sit with both knees bent at 90 degrees, one leg in front of you and one to the side.",
+        "Sit tall and lean gently over the front shin.",
+        "Rotate both knees to the other side to switch, and repeat."
+      ]
+    },
+    {
+      "id": "rf_Wrist_And_Ankle_Circles",
+      "name": "Wrist & Ankle Circles",
+      "aliases": [
+        "wrist circles",
+        "ankle circles",
+        "wrist/ankle circles"
+      ],
+      "category": "stretching",
+      "mechanic": null,
+      "force": null,
+      "level": "beginner",
+      "primaryMuscles": [
+        "forearms"
+      ],
+      "secondaryMuscles": [
+        "calves"
+      ],
+      "pattern": "mobility",
+      "equipment": [],
+      "joints": [
+        "ankle",
+        "wrist"
+      ],
+      "lengthened": false,
+      "instructions": [
+        "Circle each wrist slowly, 10 times each direction.",
+        "Lift one foot and circle the ankle 10 times each direction, then switch."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "_note": "Hand fixes for individual library entries, keyed by id. Any field set here replaces the rule-derived value.",
+  "overrides": {
+    "Mixed_Grip_Chin": {
+      "pattern": "vertical_pull",
+      "joints": [
+        "elbow",
+        "shoulder"
+      ],
+      "equipment": [
+        "pullup_bar"
+      ]
+    },
+    "Standing_Barbell_Press_Behind_Neck": {
+      "pattern": "vertical_push",
+      "joints": [
+        "elbow",
+        "neck",
+        "shoulder",
+        "wrist"
+      ]
+    },
+    "Physioball_Hip_Bridge": {
+      "pattern": "hip_extension",
+      "joints": [
+        "hip"
+      ]
+    },
+    "Dumbbell_Lying_Pronation": {
+      "pattern": "wrist",
+      "joints": [
+        "wrist"
+      ]
+    },
+    "Dumbbell_Lying_Supination": {
+      "pattern": "wrist",
+      "joints": [
+        "wrist"
+      ]
+    },
+    "Neck_Press": {
+      "pattern": "horizontal_push",
+      "joints": [
+        "elbow",
+        "shoulder",
+        "wrist"
+      ]
+    },
+    "Hip_Flexion_with_Band": {
+      "pattern": "core_flexion",
+      "joints": [
+        "hip"
+      ]
+    },
+    "Inverted_Row": {
+      "equipment": [
+        "pullup_bar"
+      ]
+    }
+  }
+}

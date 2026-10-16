@@ -46,3 +46,21 @@ Everything lives in a persisted Zustand store (`src/store.js`, localStorage key
 snapshot the day's exercises when started, so editing a plan never breaks a
 session in progress. Timers store an absolute end time, so they keep counting
 while you're on another screen or the tab is in the background.
+
+## Exercise library
+
+`src/data/library.json` holds 755 exercises (strength, powerlifting and
+stretching) built from [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
+(public domain, Unlicense) plus a few routin.fit additions. Each entry is tagged
+with movement pattern, muscles (deltoids split into front/side/rear), equipment
+needed, machine / free weight / bodyweight, joints loaded and stretch emphasis.
+
+```bash
+npm run library   # rebuild src/data/library.json and docs/library-report.md
+```
+
+Inputs live in `scripts/library/`: the dataset snapshot, `rules.mjs` (name-based
+tagging rules), `additions.json`, `aliases.json` and `overrides.json` for hand
+fixes. The tags are heuristics; `docs/library-report.md` lists what each rule
+produced for review. `src/lib/library.js` matches plan text to library entries
+and finds swaps that fit the user's gym, equipment and injuries.
