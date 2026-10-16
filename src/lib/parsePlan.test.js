@@ -12,7 +12,9 @@ describe('parsePlanText on the starter plan', () => {
   });
 
   it('marks rest days', () => {
-    expect(['Wed', 'Sat', 'Sun'].every((d) => days[d].isRest)).toBe(true);
+    expect(['Fri', 'Sun'].every((d) => days[d].isRest)).toBe(true);
+    expect(days.Wed.title).toBe('Legs & Core');
+    expect(musclesFor(days.Wed.exercises)).toEqual(['legs', 'core']);
     expect(days.Mon.isRest).toBe(false);
   });
 
@@ -25,29 +27,46 @@ describe('parsePlanText on the starter plan', () => {
   });
 
   it('keeps rest-day guidance as notes', () => {
-    expect(days.Sat.notes).toHaveLength(3);
-    expect(days.Sat.notes[0]).toMatch(/^Active Recovery/);
+    expect(days.Sun.notes).toHaveLength(3);
+    expect(days.Sun.notes[0]).toMatch(/^Active Recovery/);
   });
 
   it('splits the superset into a pair', () => {
-    const pair = days.Fri.exercises.filter((e) => e.supersetGroup);
+    const pair = days.Sat.exercises.filter((e) => e.supersetGroup);
     expect(pair.map((e) => e.name)).toEqual(['Standing Hammer Curls', 'Dumbbell Kickbacks']);
     expect(pair.every((e) => e.sets === 3 && e.target.label === '10-12')).toBe(true);
-    expect(toBlocks(days.Fri.exercises)).toHaveLength(7);
+    expect(toBlocks(days.Sat.exercises)).toHaveLength(7);
   });
 
   it('reads holds, failure sets and notes', () => {
-    const hang = days.Fri.exercises.find((e) => e.name.startsWith('Dead Hangs'));
+    const hang = days.Sat.exercises.find((e) => e.name.startsWith('Dead Hangs'));
     expect(hang.target).toMatchObject({ kind: 'hold', min: 30, max: 45 });
     expect(hang.note).toBe('Gym only');
-    const neck = days.Fri.exercises.find((e) => e.name === 'Neck Bridges');
+    const neck = days.Sat.exercises.find((e) => e.name === 'Neck Bridges');
     expect(neck.sets).toBe(2);
     expect(neck.note).toMatch(/Careful execution/);
     const legRaise = days.Thu.exercises.find((e) => e.name === 'Lying Leg Raises');
     expect(legRaise.target.kind).toBe('failure');
-    expect(days.Fri.exercises.find((e) => e.name === 'Face Pulls').note).toBe(
+    expect(days.Sat.exercises.find((e) => e.name === 'Face Pulls').note).toBe(
       'or Banded/Cable Rear Delt Pulls',
     );
+  });
+
+  it('reads starting weights, marking estimates', () => {
+    expect(days.Mon.exercises[0].startWeight).toEqual({ value: 31, unit: 'kg', estimated: false });
+    expect(days.Wed.exercises[0].startWeight).toMatchObject({ value: 16, estimated: true });
+    const [curls, kickbacks] = days.Sat.exercises.filter((e) => e.supersetGroup);
+    expect([curls.startWeight.value, kickbacks.startWeight.value]).toEqual([15.5, 4]);
+    expect(days.Mon.exercises[5].startWeight).toBeNull();
+  });
+
+  it('never trains the same main muscle on back-to-back days', () => {
+    const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    for (let i = 0; i < 7; i++) {
+      const a = new Set(musclesFor(days[order[i]].exercises).filter((m) => m !== 'core'));
+      const b = musclesFor(days[order[(i + 1) % 7]].exercises).filter((m) => m !== 'core');
+      expect([order[i], b.filter((m) => a.has(m))]).toEqual([order[i], []]);
+    }
   });
 
   it('estimates a sensible session length', () => {

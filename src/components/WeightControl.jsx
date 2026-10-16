@@ -6,9 +6,12 @@ import { exerciseKey, isBodyweight, suggestWeight } from '../lib/weights';
 import { displayWeight, formatWeight, JUMP, STEP, roundTo } from '../lib/units';
 import { fromISODate } from '../lib/dates';
 
-export default function WeightControl({ name }) {
+export default function WeightControl({ name, planWeight }) {
   const key = exerciseKey(name);
-  const saved = useStore((s) => s.weights[key]);
+  const stored = useStore((s) => s.weights[key]);
+  // A weight you saved wins; otherwise the plan's starting weight ("@ 31kg").
+  const saved = stored ?? planWeight ?? null;
+  const estimated = !stored && !!planWeight?.estimated;
   const unit = useStore((s) => s.settings.unit);
   const setWeight = useStore((s) => s.setWeight);
   const known = useKnownWeights();
@@ -58,6 +61,21 @@ export default function WeightControl({ name }) {
         <button onClick={() => commit(draft)} className="btn-primary px-3 py-1 text-xs">
           Save
         </button>
+      </div>
+    );
+  }
+
+  if (current != null && estimated) {
+    return (
+      <div className="flex flex-col items-start gap-1">
+        <button
+          onClick={open}
+          className="pill"
+          style={{ background: 'transparent', border: '1px dashed rgba(129,140,248,0.6)', color: '#c7d2fe' }}
+        >
+          ≈ {formatWeight(current, unit)}
+        </button>
+        <span className="text-[11px] leading-tight text-3">Estimate: tap to set what you actually lift.</span>
       </div>
     );
   }

@@ -92,7 +92,7 @@ function ExerciseCard({ ex, session, finished, playFirst, onToggle }) {
         {!ex.supersetGroup && <span className="text-xs text-3">rest {restSecondsFor(ex)} s</span>}
       </div>
       <div className="mt-3">
-        <WeightControl name={ex.name} />
+        <WeightControl name={ex.name} planWeight={ex.startWeight} />
       </div>
       <div className="mt-3">
         <SetDots count={ex.sets} done={done} disabled={finished} playFirst={playFirst} onToggle={(i) => onToggle(ex.id, i)} />

@@ -164,7 +164,7 @@ export const useStore = create(
         let loads = session.loads ?? {};
         if (session.kind === 'workout') {
           const item = session.snapshot.exercises.find((e) => e.id === itemId);
-          const w = item && get().weights[exerciseKey(item.name)];
+          const w = item && (get().weights[exerciseKey(item.name)] ?? item.startWeight);
           const byItem = { ...(loads[itemId] ?? {}) };
           if (checking && w) byItem[setIndex] = { value: w.value, unit: w.unit };
           if (!checking) delete byItem[setIndex];
@@ -276,7 +276,7 @@ export const useStore = create(
     }),
     {
       name: 'workout-app',
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
         // v2: drop the vague "Hyper-mobility & posture flow" move from saved plans.
         if (version < 2 && persisted?.plans) {
@@ -285,6 +285,17 @@ export const useStore = create(
             const sourceText = p.sourceText.replaceAll('Hyper-mobility & posture flow, ', '');
             return { ...p, sourceText, days: parsePlanText(sourceText).days };
           });
+        }
+        // v3: the starter plan gains a leg day, moves the upper-body day to Saturday,
+        // and carries starting weights. Only replaces the untouched starter plan.
+        if (version < 3 && persisted?.plans) {
+          persisted.plans = persisted.plans.map((p) =>
+            p.name === DEFAULT_PLAN_NAME &&
+            !p.sourceText?.includes('@') &&
+            p.sourceText?.includes('Fri: Upper Body, Forearms & Rear Delts')
+              ? { ...p, sourceText: DEFAULT_PLAN_TEXT, days: parsePlanText(DEFAULT_PLAN_TEXT).days }
+              : p,
+          );
         }
         return persisted;
       },

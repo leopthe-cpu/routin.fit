@@ -72,10 +72,30 @@ export function parseTarget(raw) {
   return t;
 }
 
+/**
+ * Starting weights written after "@": "@ 31kg", "@ ~16 kg" (~ = estimate),
+ * or "@ 15.5kg / ~4kg" for the two halves of a superset.
+ */
+export function parseStartWeights(text) {
+  return text.split('/').map((part) => {
+    const w = part.trim().match(/^(~)?\s*(\d+(?:[.,]\d+)?)\s*(kg|lb|lbs)?$/i);
+    if (!w) return null;
+    const unit = (w[3] ?? 'kg').toLowerCase().startsWith('lb') ? 'lb' : 'kg';
+    return { value: Number(w[2].replace(',', '.')), unit, estimated: !!w[1] };
+  });
+}
+
 function parseExerciseLine(line, dayKey, index, nextGroup) {
   const m = line.match(EXERCISE);
   if (!m) return null;
-  const [, rawName, sets, rawTarget] = m;
+  const [, rawName, sets] = m;
+  let rawTarget = m[3];
+  let weights = [];
+  const at = rawTarget.match(/^(.*?)\s*@\s*([^@]+)$/);
+  if (at) {
+    rawTarget = at[1];
+    weights = parseStartWeights(at[2]);
+  }
   const [nameNoParens, nameNotes] = extractParens(rawName);
   const target = parseTarget(rawTarget);
   const isSuperset =
@@ -87,6 +107,7 @@ function parseExerciseLine(line, dayKey, index, nextGroup) {
   return names.map((name, i) => ({
     id: `${dayKey}-${index}${names.length > 1 ? String.fromCharCode(97 + i) : ''}`,
     name: name.trim(),
+    startWeight: (weights.length > 1 ? weights[i] : weights[0]) ?? null,
     sets: Number(sets),
     target: { ...target, label: target.label.replace(/\s+each$/i, '') },
     supersetGroup: group,

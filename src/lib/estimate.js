@@ -66,7 +66,7 @@ const MUSCLE_RULES = [
   ['back', /row|pullover|pull-?up|pulldown|lat |dead hang|chin-?up/i],
   ['shoulders', /shoulder press|overhead press|lateral raise|arnold|front raise/i],
   ['triceps', /skull|tricep|kickback|pushdown|overhead .*extension|close-grip/i],
-  ['biceps', /curl|hammer/i],
+  ['biceps', /(?<!leg )curl|hammer/i],
   ['legs', /squat|lunge|deadlift|rdl|calf|leg press|leg curl|leg extension|hip thrust|glute/i],
 ];
 
