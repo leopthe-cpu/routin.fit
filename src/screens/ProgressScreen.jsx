@@ -73,7 +73,7 @@ export default function ProgressScreen() {
 
   return (
     <div className="space-y-5">
-      <header>
+      <header className="sticky-head">
         <h1 className="text-3xl font-bold">Progress</h1>
         <p className="text-sm text-2">
           {stats.firstDate

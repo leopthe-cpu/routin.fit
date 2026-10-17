@@ -82,6 +82,18 @@ export const PHRASES = [
   'Breathe in. Today counts.',
   'Strong is built quietly.',
   'Move a little. Feel a lot better.',
+  'Consistency beats intensity.',
+  'Your future self says thanks.',
+  'Five minutes still counts.',
+  'Stand tall. Breathe deep.',
+  'Progress, not perfection.',
+  'Rest is part of the plan.',
+  'Keep the promise you made yourself.',
+  'Good form, good day.',
+  'One more good habit today.',
+  'Calm mind, strong body.',
+  'Make today a little lighter.',
+  'You are allowed to enjoy this.',
 ];
 
 /** A phrase for this visit, never the same as the last one shown. */

@@ -92,7 +92,12 @@ function usePhrase() {
       else if (hiddenAt && Date.now() - hiddenAt > 10 * 60 * 1000) setIndex((i) => pickPhrase(i));
     };
     document.addEventListener('visibilitychange', onChange);
-    return () => document.removeEventListener('visibilitychange', onChange);
+    // While the app is open, a new phrase drifts in every 90 seconds.
+    const id = setInterval(() => !document.hidden && setIndex((i) => pickPhrase(i)), 90_000);
+    return () => {
+      document.removeEventListener('visibilitychange', onChange);
+      clearInterval(id);
+    };
   }, []);
   return PHRASES[index];
 }
@@ -168,11 +173,30 @@ export default function App() {
     const el = pagerRef.current;
     el?.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
   };
+  const settleRef = useRef(0);
   const onPagerScroll = (e) => {
     const el = e.currentTarget;
     const i = Math.round(el.scrollLeft / el.clientWidth);
     if (i !== page) setPage(i);
+    // Once scrolling stops, make sure a page sits exactly in view (iOS can
+    // leave it a few pixels off after a layout change).
+    clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      const target = Math.round(el.scrollLeft / el.clientWidth) * el.clientWidth;
+      if (Math.abs(el.scrollLeft - target) > 1) el.scrollTo({ left: target, behavior: 'smooth' });
+    }, 140);
   };
+
+  // Keep the current page aligned when the pager's size changes (rotation, island).
+  useEffect(() => {
+    const el = pagerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(() => {
+      el.scrollLeft = Math.round(el.scrollLeft / el.clientWidth) * el.clientWidth;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Away from Today the sky folds into a slim band so lists get the room.
   const skyH = page === 0 ? 'var(--sky-h)' : 'var(--sky-band)';
@@ -186,22 +210,19 @@ export default function App() {
       >
         <Sky sky={sky} />
         <div
-          className="absolute inset-x-6 flex flex-col gap-3.5 transition-opacity duration-300"
+          className="absolute inset-x-6 bottom-0 flex items-center justify-center transition-opacity duration-300"
           style={{
-            top: 'max(clamp(1.5rem, 6dvh, 3.5rem), calc(env(safe-area-inset-top) + 1rem))',
+            top: 'env(safe-area-inset-top)',
             color: sky.ink,
             opacity: reveal || page !== 0 ? 0 : 1,
           }}
         >
-          <div className="sky-dots flex gap-2" aria-hidden="true">
-            {sky.dots.map((c) => (
-              <span key={c} className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
-            ))}
-          </div>
-          <p className="greeting max-w-[300px] font-light leading-[1.2] tracking-tight">
+          <p className="greeting max-w-[320px] text-center font-light leading-[1.2] tracking-tight">
             {greeting}
             <br />
-            {phrase}
+            <span key={phrase} className="phrase-in inline-block">
+              {phrase}
+            </span>
           </p>
         </div>
       </div>
@@ -211,6 +232,21 @@ export default function App() {
         style={{ top: skyH, transition: 'top 700ms cubic-bezier(0.2, 0.8, 0.2, 1)' }}
         aria-hidden={!!reveal}
       >
+        <nav className="flex shrink-0 justify-center gap-1 px-2 pt-1" style={{ background: 'var(--bg)' }}>
+          {PAGES.map((label, i) => (
+            <button
+              key={label}
+              onClick={() => goTo(i)}
+              aria-current={page === i ? 'page' : undefined}
+              className="label min-h-[44px] px-3 text-[10px]"
+              style={{ color: page === i ? 'var(--text-1)' : 'var(--text-3)' }}
+            >
+              <span className="pb-[3px]" style={{ borderBottom: `1px solid ${page === i ? 'var(--text-1)' : 'transparent'}` }}>
+                {label}
+              </span>
+            </button>
+          ))}
+        </nav>
         <div ref={pagerRef} onScroll={onPagerScroll} className="no-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
           <section aria-label="Today" className="today-fit h-full w-full shrink-0 snap-start overflow-hidden px-5">
             <TodayScreen now={now} sky={sky} onOpen={(kind) => open(kind)} />
@@ -233,21 +269,6 @@ export default function App() {
         </div>
 
         {!reveal && hasTimer && !activeKind && <TimerBar now={now} />}
-        <nav className="flex justify-center gap-1 px-2" style={{ background: 'var(--bg)' }}>
-          {PAGES.map((label, i) => (
-            <button
-              key={label}
-              onClick={() => goTo(i)}
-              aria-current={page === i ? 'page' : undefined}
-              className="label min-h-[44px] px-3 text-[10px]"
-              style={{ color: page === i ? 'var(--text-1)' : 'var(--text-3)' }}
-            >
-              <span className="pb-[3px]" style={{ borderBottom: `1px solid ${page === i ? 'var(--text-1)' : 'transparent'}` }}>
-                {label}
-              </span>
-            </button>
-          ))}
-        </nav>
         <div style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))', background: 'var(--bg)' }}>
           {!reveal && <SessionIsland now={now} onOpen={(kind, date) => open(kind, { date })} />}
         </div>
@@ -263,7 +284,7 @@ export default function App() {
           onToggleMusic={toggleMusic}
           onClose={close}
           onShowList={() => setReveal((r) => ({ ...r, list: true }))}
-          onFocus={() => setReveal((r) => ({ ...r, list: false }))}
+          onFocus={(extra = {}) => setReveal((r) => ({ ...r, list: false, ...extra }))}
         />
       )}
     </div>

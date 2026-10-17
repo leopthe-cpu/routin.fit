@@ -73,7 +73,7 @@ function SetDots({ count, done, disabled, playFirst, onToggle }) {
   );
 }
 
-function ExerciseCard({ ex, session, finished, playFirst, onToggle }) {
+function ExerciseCard({ ex, session, finished, playFirst, onToggle, onPick }) {
   const done = session?.done[ex.id] ?? [];
   const complete = done.length >= ex.sets;
   return (
@@ -97,6 +97,15 @@ function ExerciseCard({ ex, session, finished, playFirst, onToggle }) {
       <div className="mt-3">
         <SetDots count={ex.sets} done={done} disabled={finished} playFirst={playFirst} onToggle={(i) => onToggle(ex.id, i)} />
       </div>
+      {onPick && !finished && !complete && (
+        <button
+          onClick={() => onPick(ex.id)}
+          className="mt-3 flex min-h-[40px] items-center gap-1.5 rounded-full px-3.5 text-sm font-medium"
+          style={{ border: '1px solid var(--card-border)' }}
+        >
+          <Play className="h-3.5 w-3.5" fill="currentColor" /> Do this one next
+        </button>
+      )}
     </div>
   );
 }
@@ -149,7 +158,7 @@ function MoveCard({ name, index, on, timing, seconds, finished, playable, onTick
   );
 }
 
-export default function SessionScreen({ date, kind, onBack, embedded = false }) {
+export default function SessionScreen({ date, kind, onBack, embedded = false, onPick }) {
   const plan = useStore((s) => s.activePlan());
   const key = sessionKey(date, kind);
   const session = useStore((s) => s.sessions[key]);
@@ -285,6 +294,7 @@ export default function SessionScreen({ date, kind, onBack, embedded = false }) 
                 finished={finished}
                 playFirst={!session && ex.id === content.exercises[0].id}
                 onToggle={onToggle}
+                onPick={onPick}
               />
             ));
             return block.group && block.exercises.length > 1 ? (

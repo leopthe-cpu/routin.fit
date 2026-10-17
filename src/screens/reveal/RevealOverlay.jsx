@@ -125,13 +125,13 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
   const hasMusic = kind === 'morning' || kind === 'meditate';
 
   // Into focus: a workout's clock starts now; stretches start their first move when the focus view opens.
-  const begin = () => {
+  const begin = (extra = {}) => {
     const st = useStore.getState();
     if (kind === 'workout' && !st.sessions[sessionKey(date, kind)]) {
       const plan = st.activePlan();
       st.startSession({ date, kind, day: plan.days[dayKeyOf(fromISODate(date))], planId: plan.id });
     }
-    onFocus();
+    onFocus(extra);
   };
 
   useEffect(() => {
@@ -156,12 +156,15 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
     setCount(3);
   };
 
-  const start = (fresh) => {
+  const start = (fresh, extra) => {
     // Sound has to start inside the tap.
     if (music && kind === 'morning') startAmbient();
-    if (!fresh) return begin();
-    countdown(begin);
+    if (!fresh) return begin(extra);
+    countdown(() => begin(extra));
   };
+
+  // From the list: do this exercise next (the order resumes after it).
+  const pick = (exId) => start(!useStore.getState().sessions[sessionKey(date, kind)], { focusExId: exId });
 
   return (
     <div
@@ -174,39 +177,39 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
       }}
     >
-      <div
-        className="mx-auto mt-0.5 h-1 w-10 shrink-0 rounded-full"
-        style={{ background: 'rgb(var(--ink-rgb) / 0.35)' }}
-        aria-hidden="true"
-      />
-      <div className="flex items-center gap-2 px-4 pt-1.5">
-        <button
-          onClick={onClose}
-          aria-label={isSession ? 'Minimize' : 'Close'}
-          className="flex h-11 w-11 items-center justify-center rounded-full"
-          style={{ border: '1px solid var(--glass-border)' }}
-        >
-          <ChevronDown className="h-5 w-5" />
-        </button>
-        <span className="flex-1" />
-        {isSession && !reveal.list && (
+      {/* Grab handle and top bar: drag down here to minimize. */}
+      <div {...pull.handlers} style={{ touchAction: 'none' }}>
+        <div className="flex h-4 items-center justify-center" aria-hidden="true">
+          <span className="h-1 w-10 rounded-full" style={{ background: 'rgb(var(--ink-rgb) / 0.35)' }} />
+        </div>
+        <div className="flex items-center gap-2 px-4 pt-0.5">
           <button
-            onClick={onShowList}
-            aria-label="Full list"
-            className="flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[15px] font-medium"
-            style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+            onClick={onClose}
+            aria-label={isSession ? 'Minimize' : 'Close'}
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{ border: '1px solid var(--glass-border)' }}
           >
-            <List className="h-4 w-4" /> List
+            <ChevronDown className="h-5 w-5" />
           </button>
-        )}
-        {hasMusic && (
-          <GlassButton onClick={onToggleMusic} aria-pressed={music} aria-label={music ? 'Mute sound' : 'Play sound'}>
-            {music ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-            {music ? 'Rain' : 'Off'}
-          </GlassButton>
-        )}
+          <span className="flex-1" />
+          {isSession && !reveal.list && (
+            <button
+              onClick={onShowList}
+              aria-label="Full list"
+              className="flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[15px] font-medium"
+              style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+            >
+              <List className="h-4 w-4" /> List
+            </button>
+          )}
+          {hasMusic && (
+            <GlassButton onClick={onToggleMusic} aria-pressed={music} aria-label={music ? 'Mute sound' : 'Play sound'}>
+              {music ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              {music ? 'Rain' : 'Off'}
+            </GlassButton>
+          )}
+        </div>
       </div>
-
       {count != null && (
         <div className="absolute inset-0 z-10 flex items-center justify-center" aria-live="assertive">
           <span key={count} className="count-pop text-[180px] font-light leading-none tabular-nums">
@@ -227,7 +230,13 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
           <>
             <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-3">
               <ListHeader date={date} kind={kind} onStart={start} />
-              <SessionScreen date={date} kind={kind} onBack={onClose} embedded />
+              <SessionScreen
+                date={date}
+                kind={kind}
+                onBack={onClose}
+                embedded
+                onPick={kind === 'workout' ? pick : undefined}
+              />
             </div>
             {timerHere && (
               <div className="px-2">
@@ -238,7 +247,7 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
         ) : (
           <div {...pull.handlers} className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-3">
             {kind === 'morning' && <StretchFocus date={date} now={now} />}
-            {kind === 'workout' && <WorkoutFocus date={date} now={now} />}
+            {kind === 'workout' && <WorkoutFocus date={date} now={now} focusExId={reveal.focusExId} />}
             {kind === 'meditate' && <Meditate sky={sky} now={now} countdown={countdown} />}
             {kind === 'alarms' && <AlarmsPreview />}
           </div>

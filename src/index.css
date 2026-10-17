@@ -280,3 +280,83 @@ body {
   transition-property: transform, opacity;
   transition-timing-function: ease-in-out;
 }
+
+/* Greeting phrase: each new one fades up gently. */
+@keyframes phrase-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.phrase-in {
+  animation: phrase-in 1.2s ease-out both;
+}
+
+/* The sun breathes slowly while the app is open. */
+@keyframes sun-glow {
+  from {
+    transform: scale(1);
+    opacity: 0.88;
+  }
+  to {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+}
+.sun-glow {
+  transform-origin: 50% 100%;
+  animation: sun-glow 6s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* No pinch or double-tap zoom: this is an app, not a page. */
+html {
+  touch-action: manipulation;
+}
+input,
+textarea,
+select {
+  font-size: 16px !important; /* below 16px iOS zooms in on focus */
+}
+
+/* Page titles stay at the top while the rest of the page scrolls under them. */
+.sticky-head {
+  position: sticky;
+  top: -1.25rem; /* the section's top padding */
+  z-index: 10;
+  margin: -1.25rem -1.25rem 0;
+  padding: 1.25rem 1.25rem 0.75rem;
+  background: var(--bg);
+}
+
+/*
+ * Each tile is a size container, so its text shrinks with it (for example when
+ * the session island takes room at the bottom) instead of spilling out.
+ */
+.today-tile {
+  container-type: size;
+}
+.today-tile > span {
+  width: 100%;
+}
+@container (max-height: 96px) {
+  .tile-sub {
+    display: none;
+  }
+}
+@container (max-height: 76px) {
+  .tile-chip {
+    height: 22px;
+    width: 22px;
+  }
+  .tile-label {
+    font-size: 9px;
+  }
+}
+.today-tile-value {
+  font-size: clamp(13px, 19cqh, 19px);
+}

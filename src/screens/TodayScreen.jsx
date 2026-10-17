@@ -1,4 +1,4 @@
-import { ArrowUpRight, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, MapPin, Moon, Play, Sun } from 'lucide-react';
+import { AlarmClock, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus } from '../store';
 import { dayKeyOf, toISODate, weekDates } from '../lib/dates';
 import { estimateWorkoutMinutes } from '../lib/estimate';
@@ -56,7 +56,7 @@ function Clock({ now }) {
 
 const STATUS_WORD = { todo: 'Start', progress: 'Resume', done: 'Done', partial: 'Ended' };
 
-function Tile({ label, value, sub, status, icon, tint, onClick, ariaLabel, disabled }) {
+function Tile({ label, value, sub, status, icon: Icon, tint, onClick, ariaLabel, disabled }) {
   const done = status === 'Done';
   return (
     <button
@@ -71,27 +71,23 @@ function Tile({ label, value, sub, status, icon, tint, onClick, ariaLabel, disab
       }}
     >
       <span className="flex w-full items-center justify-between">
-        <span className="label text-2">{label}</span>
+        <span className="tile-label label text-2">{label}</span>
         <span
           aria-hidden="true"
-          className="flex h-7 w-7 items-center justify-center rounded-full"
+          className="tile-chip flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
           style={{ background: done ? 'rgba(34,197,94,0.2)' : 'rgb(var(--ink-rgb) / 0.07)' }}
         >
           {done ? (
-            <Check className="h-3 w-3" strokeWidth={3} style={{ color: '#16a34a' }} />
-          ) : disabled ? (
-            <Moon className="h-3 w-3" />
-          ) : icon === 'play' ? (
-            <Play className="ml-px h-3 w-3" fill="currentColor" />
+            <Check className="h-3.5 w-3.5" strokeWidth={3} style={{ color: '#16a34a' }} />
           ) : (
-            <ArrowUpRight className="h-3 w-3" strokeWidth={2.4} />
+            <Icon className="h-3.5 w-3.5" strokeWidth={2} />
           )}
         </span>
       </span>
       <span className="flex w-full flex-col gap-0.5">
         <span className="today-tile-value truncate leading-tight">{value}</span>
         <span className="flex items-baseline justify-between gap-1.5">
-          <span className="truncate text-xs text-3">{sub}</span>
+          <span className="tile-sub truncate text-xs text-3">{sub}</span>
           <span className="label shrink-0 text-[9px] text-2">{status}</span>
         </span>
       </span>
@@ -224,7 +220,7 @@ export default function TodayScreen({ now, sky, onOpen }) {
             value={day.morning ? 'Morning flow' : 'Not planned'}
             sub={day.morning ? `${day.morning.items.length} moves · ${morningMinutes(day.morning)} min` : 'Add one to your plan'}
             status={day.morning ? tileState('morning') : '—'}
-            icon="play"
+            icon={PersonStanding}
             tint={sky.dots[0]}
             disabled={!day.morning}
             ariaLabel="Start morning stretches"
@@ -239,7 +235,7 @@ export default function TodayScreen({ now, sky, onOpen }) {
                 : day.notes[0] ?? 'Let your body recover'
             }
             status={day.exercises.length ? tileState('workout') : 'Rest'}
-            icon="play"
+            icon={day.exercises.length ? Dumbbell : Moon}
             tint={sky.dots[1]}
             disabled={!day.exercises.length}
             ariaLabel={`Start ${day.title} workout`}
@@ -247,22 +243,23 @@ export default function TodayScreen({ now, sky, onOpen }) {
           />
           <Tile
             label="Meditate"
-            value="Soon"
+            value="Breathe"
             sub="Breath · sleep · focus"
-            status="Preview"
-            icon="arrow"
+            status="Begin"
+            icon={Flower2}
             tint={sky.dots[2]}
-            ariaLabel="Preview meditation"
+            ariaLabel="Meditate"
             onClick={() => onOpen('meditate')}
           />
           <Tile
             label="Alarms"
             value="Soon"
             sub="Sunrise wake-up"
-            status="Preview"
-            icon="arrow"
+            status="Soon"
+            icon={AlarmClock}
             tint={sky.dots[1]}
-            ariaLabel="Preview alarms"
+            disabled
+            ariaLabel="Alarms, coming soon"
             onClick={() => onOpen('alarms')}
           />
         </div>

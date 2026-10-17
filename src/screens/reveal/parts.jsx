@@ -113,10 +113,10 @@ export function FocusHeader({ phrase, fraction, elapsed }) {
   const pct = Math.round(Math.min(1, Math.max(0, fraction)) * 1000) / 10;
   const shown = useTween(pct);
   if (phrase) {
-    return <p className="max-w-[330px] px-1 pt-2 text-[30px] font-light leading-[1.15] tracking-tight">{phrase}</p>;
+    return <p className="max-w-[330px] px-1 text-[30px] font-light leading-[1.15] tracking-tight">{phrase}</p>;
   }
   return (
-    <div className="flex flex-col px-1 pt-1">
+    <div className="flex w-full flex-col px-1">
       {elapsed != null && (
         <span className="text-[28px] font-light leading-none tabular-nums opacity-80">{clock(elapsed)}</span>
       )}

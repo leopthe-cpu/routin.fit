@@ -95,7 +95,7 @@ export const useStore = create(
         openrouterKey: '',
         openrouterModel: '',
         unit: 'kg',
-        name: '',
+        name: 'Leo',
         // 'on' once the user has asked for weather (it needs location permission).
         weather: 'off',
         tempUnit: 'celsius',
@@ -337,7 +337,7 @@ export const useStore = create(
     }),
     {
       name: 'workout-app',
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         // v2: drop the vague "Hyper-mobility & posture flow" move from saved plans.
         if (version < 2 && persisted?.plans) {
@@ -369,6 +369,18 @@ export const useStore = create(
             if (persisted.activeSessionKey === latest.key) persisted.activeSessionKey = null;
             if (persisted.timer?.sessionKey === latest.key) persisted.timer = null;
           }
+        }
+        // v5: clear every session started during the owner's test evening (from
+        // 6 pm New York time on 16 Oct 2026), and set the greeting name.
+        if (version < 5 && persisted) {
+          if (persisted.sessions) {
+            for (const [k, x] of Object.entries(persisted.sessions)) {
+              if ((x.startedAt ?? '') >= '2026-10-16T22:00:00Z') delete persisted.sessions[k];
+            }
+            if (persisted.activeSessionKey && !persisted.sessions[persisted.activeSessionKey]) persisted.activeSessionKey = null;
+            if (persisted.timer && !persisted.sessions[persisted.timer.sessionKey]) persisted.timer = null;
+          }
+          if (persisted.settings && !persisted.settings.name) persisted.settings.name = 'Leo';
         }
         return persisted;
       },

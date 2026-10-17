@@ -92,7 +92,7 @@ function backText(face, ex, exercises) {
   }
 }
 
-function SetCard({ step, exercises, done, face, setFace, onNext, onUndo }) {
+function SetCard({ step, exercises, done, face, setFace, nextLabel, onNext, onUndo }) {
   const { ex, setIndex } = step;
   const toggle = (k) => setFace(face === k ? 'front' : k);
   const tip = tipFor(ex);
@@ -155,7 +155,7 @@ function SetCard({ step, exercises, done, face, setFace, onNext, onUndo }) {
                   className="flex h-[60px] items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
                   style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
                 >
-                  Next set
+                  <span className="truncate px-3">{nextLabel}</span>
                 </button>
               )}
             </>
@@ -195,12 +195,23 @@ function Back({ face, ex, exercises, onBack }) {
   );
 }
 
+/** The set to do now: the first open set of a picked exercise, else the first open set in order. */
+function currentIndex(seq, isDone, focusExId) {
+  if (focusExId) {
+    const picked = seq.findIndex((st) => st.ex.id === focusExId && !isDone(st));
+    if (picked >= 0) return picked;
+  }
+  return seq.findIndex((st) => !isDone(st));
+}
+
 /**
- * One set at a time. Swipe (or Back / Next) moves between sets: earlier sets
- * can be undone, later ones previewed. Next set ticks the set and starts the
- * rest timer; finishing an exercise shows a short "done" stamp.
+ * One set at a time. Next set ticks the set and starts the rest timer; the
+ * last set of an exercise names the one that follows. Back walks through the
+ * sets already done (never the rests between them) so any of them can be
+ * undone. Picking an exercise in the list jumps to it; afterwards the order
+ * picks up where it left off.
  */
-export default function WorkoutFocus({ date, now }) {
+export default function WorkoutFocus({ date, now, focusExId }) {
   const plan = useStore((s) => s.activePlan());
   const key = sessionKey(date, 'workout');
   const session = useStore((s) => s.sessions[key]);
@@ -211,27 +222,34 @@ export default function WorkoutFocus({ date, now }) {
   const exercises = content?.exercises;
   const seq = useMemo(() => (exercises ? setSequence(exercises) : []), [exercises]);
 
-  const [viewPos, setViewPos] = useState(null); // null = follow the current set
+  const [back, setBack] = useState(0); // how many done sets back from "now" we're looking
   const [dir, setDir] = useState('next');
   const [face, setFace] = useState('front');
   const [stamp, setStamp] = useState(null);
+  const [lastDone, setLastDone] = useState(null); // seq index of the set just ticked
 
   const isDone = (st) => !!session?.done[st.ex.id]?.includes(st.setIndex);
-  const currentPos = seq.findIndex((st) => !isDone(st));
+  const currentPos = currentIndex(seq, isDone, focusExId);
   const allDone = seq.length > 0 && currentPos === -1;
   const resting = timer?.sessionKey === key && !timer.complete;
-  const pos = viewPos ?? (allDone ? seq.length : currentPos);
-  const showRest = viewPos === null && resting && !allDone;
-  const lastPos = allDone ? seq.length : seq.length - 1;
+  // Back/Next move along the sets already done, in order, then "now".
+  const trail = seq.map((st, i) => (isDone(st) ? i : -1)).filter((i) => i >= 0);
+  const backIdx = trail.length - Math.min(back, trail.length);
+  const viewingPast = back > 0 && backIdx < trail.length;
+  const pos = viewingPast ? trail[backIdx] : allDone ? seq.length : currentPos;
+  const showRest = !viewingPast && resting && !allDone;
 
-  const go = (delta) => {
-    const target = Math.min(lastPos, Math.max(0, pos + (showRest && delta > 0 ? 0 : delta)));
-    if (target === pos && !(showRest && delta > 0)) return;
+  const move = (delta) => {
     setDir(delta > 0 ? 'next' : 'prev');
     setFace('front');
-    setViewPos(target === currentPos && !resting ? null : target);
+    setBack((b) => Math.max(0, Math.min(trail.length, b - delta)));
   };
-  const { handlers, dx } = useSwipe({ onPrev: () => go(-1), onNext: () => go(1) });
+  // A swipe forward never ticks a set (too easy to do by accident); the buttons do.
+  const swipeNext = () => {
+    if (viewingPast) move(1);
+    else if (showRest) clearTimer();
+  };
+  const { handlers, dx } = useSwipe({ onPrev: () => move(-1), onNext: swipeNext });
 
   if (!content) {
     return (
@@ -247,14 +265,16 @@ export default function WorkoutFocus({ date, now }) {
   const restart = () => {
     if (!confirm('Restart this workout? Ticked sets are cleared.')) return;
     discardSession(key);
-    setViewPos(null);
+    setBack(0);
   };
 
   if (session?.endedAt) {
     return (
       <>
-        <FocusHeader fraction={total ? done / total : 0} />
-        <GlassCard className="mt-auto gap-3">
+        <div className="flex flex-1 items-center">
+          <FocusHeader fraction={total ? done / total : 0} />
+        </div>
+        <GlassCard className="gap-3">
           <p className="text-[30px] font-light leading-tight">
             {done >= total ? 'Workout done. Strong work.' : 'Ended early.'}
           </p>
@@ -269,35 +289,61 @@ export default function WorkoutFocus({ date, now }) {
     );
   }
 
+  /** What follows a set once it's ticked (null when it's the very last). */
+  const after = (st) => {
+    const isDoneAfter = (x) => isDone(x) || (x.ex.id === st.ex.id && x.setIndex === st.setIndex);
+    const i = currentIndex(seq, isDoneAfter, focusExId);
+    return i >= 0 ? seq[i] : null;
+  };
+  const labelFor = (st) => {
+    const next = after(st);
+    if (!next) return 'Finish workout';
+    const lastOfExercise = (session?.done[st.ex.id]?.length ?? 0) + 1 >= st.ex.sets;
+    return lastOfExercise && next.ex.id !== st.ex.id ? `Start ${next.ex.name}` : 'Next set';
+  };
+
   const complete = (st) => {
     if (!session) startSession({ date, kind: 'workout', day, planId: plan.id });
     const finishesExercise = (session?.done[st.ex.id]?.length ?? 0) + 1 >= st.ex.sets;
+    const last = !after(st);
     toggleSet(key, st.ex.id, st.setIndex);
+    setLastDone(seq.indexOf(st));
     setDir('next');
     setFace('front');
-    setViewPos(null);
+    setBack(0);
     if (finishesExercise) {
       setStamp(st.ex.name);
       setTimeout(() => setStamp(null), 1400);
     }
+    if (last) finishSession(key);
   };
   const undo = (st) => {
     toggleSet(key, st.ex.id, st.setIndex);
     if (resting) clearTimer();
     setDir('prev');
     setFace('front');
-    setViewPos(null);
+    setBack(0);
   };
 
   const step = seq[pos];
   const upNext = seq[currentPos];
+  // The set this rest follows: the one just ticked, else the last one done before now.
+  const restFor = seq[lastDone ?? -1] && isDone(seq[lastDone]) ? seq[lastDone] : seq[trail[trail.length - 1]];
+
   let card;
   if (showRest) {
     const left = timerLeft(timer, now);
     card = (
       <GlassCard className="gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-medium">Rest</span>
+        <div className="flex items-start justify-between gap-3">
+          <span className="flex min-w-0 flex-col">
+            <span className="text-xl font-medium">Rest</span>
+            {restFor && (
+              <span className="line-clamp-2 text-[15px] leading-snug opacity-80">
+                after {restFor.ex.name} · set {restFor.setIndex + 1}/{restFor.ex.sets}
+              </span>
+            )}
+          </span>
           <Chip icon={Timer} tone="soft">
             {timer.total} s
           </Chip>
@@ -319,7 +365,7 @@ export default function WorkoutFocus({ date, now }) {
             <Plus className="h-4 w-4" /> 15
           </GlassButton>
           <GlassButton className="ml-auto" onClick={clearTimer}>
-            Skip <SkipForward className="h-4 w-4" />
+            Skip rest <SkipForward className="h-4 w-4" />
           </GlassButton>
         </div>
       </GlassCard>
@@ -345,20 +391,31 @@ export default function WorkoutFocus({ date, now }) {
         done={isDone(step)}
         face={face}
         setFace={setFace}
+        nextLabel={labelFor(step)}
         onNext={() => complete(step)}
         onUndo={() => undo(step)}
       />
     );
   }
 
+  // The Next button does what the card's main button does now.
+  const next = () => {
+    if (viewingPast) move(1);
+    else if (showRest) clearTimer();
+    else if (step && !isDone(step)) complete(step);
+  };
+
   return (
     <>
-      <FocusHeader
-        phrase={done === 0 && !resting ? startPhrase(key) : null}
-        fraction={total ? done / total : 0}
-        elapsed={elapsed}
-      />
-      <div className="mt-auto flex flex-col gap-3 pt-4">
+      {/* The header sits centred in the space above the card. */}
+      <div className="flex flex-1 items-center py-2">
+        <FocusHeader
+          phrase={done === 0 && !resting ? startPhrase(key) : null}
+          fraction={total ? done / total : 0}
+          elapsed={elapsed}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
         <div {...handlers} className="relative" style={{ touchAction: 'pan-y' }}>
           <div
             key={`${pos}-${showRest ? 'rest' : 'set'}`}
@@ -380,13 +437,13 @@ export default function WorkoutFocus({ date, now }) {
           )}
         </div>
         <StepNav
-          onPrev={() => go(-1)}
-          onNext={() => go(1)}
-          canPrev={pos > 0 || showRest}
-          canNext={showRest || pos < lastPos}
+          onPrev={() => move(-1)}
+          onNext={next}
+          canPrev={backIdx > 0}
+          canNext={viewingPast || showRest || (!!step && !isDone(step))}
         >
           <span className="label text-[10px] opacity-70">
-            {Math.min(pos + 1, seq.length)} / {seq.length}
+            {done} / {total}
           </span>
         </StepNav>
       </div>

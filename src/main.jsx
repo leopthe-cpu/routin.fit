@@ -25,3 +25,8 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 // Ask the browser not to clear saved progress under storage pressure (best effort).
 navigator.storage?.persist?.().catch(() => {});
+
+// iOS Safari ignores user-scalable=no for pinches; block its gesture events too.
+for (const type of ['gesturestart', 'gesturechange']) {
+  document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+}

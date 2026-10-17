@@ -4,7 +4,15 @@ import { weekDates, todayISO, planWeek, fromISODate } from '../lib/dates';
 import { morningCopy, workoutCopy } from '../lib/estimate';
 import DayCard from '../components/DayCard';
 
-const LONG_DAY = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+const LONG_DAY = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+};
 
 export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
   const plan = useStore((s) => s.activePlan());
@@ -56,52 +64,62 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
 
   return (
     <div className="space-y-5">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-wider text-3">
-          {plan.name} · Week {planWeek(plan.startDate, selectedDate)}
-        </p>
-        <h1 className="mt-1 text-3xl font-bold">
-          {selectedDate === today ? 'Today' : LONG_DAY[current.key]}
-        </h1>
-        <p className="text-sm text-2">
-          {day.isRest ? 'Rest day' : day.title} ·{' '}
-          {selected.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-        </p>
-      </header>
+      {/* Day title and week strip stay put while the cards scroll under them. */}
+      <div className="sticky-head space-y-4">
+        <header>
+          <p className="text-xs font-semibold uppercase tracking-wider text-3">
+            {plan.name} · Week {planWeek(plan.startDate, selectedDate)}
+          </p>
+          <h1 className="mt-1 text-3xl font-bold">{selectedDate === today ? 'Today' : LONG_DAY[current.key]}</h1>
+          <p className="text-sm text-2">
+            {day.isRest ? 'Rest day' : day.title} ·{' '}
+            {selected.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+          </p>
+        </header>
 
-      <div className="flex items-center gap-1">
-        <button aria-label="Previous week" onClick={() => shiftWeek(-1)} className="p-1 text-3">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <div className="grid flex-1 grid-cols-7 gap-1">
-          {week.map((w) => {
-            const isSel = w.iso === selectedDate;
-            const st = dayStatus(w.iso, w.key);
-            return (
-              <button
-                key={w.iso}
-                onClick={() => onSelectDate(w.iso)}
-                className="flex flex-col items-center rounded-xl py-2 transition"
-                style={{
-                  background: isSel ? 'rgb(var(--ink-rgb) / 0.12)' : 'rgb(var(--ink-rgb) / 0.04)',
-                  border: `1px solid ${isSel ? 'rgb(var(--ink-rgb) / 0.25)' : 'rgb(var(--ink-rgb) / 0.06)'}`,
-                }}
-              >
-                <span className={`text-[11px] ${w.iso === today ? 'font-bold text-white' : 'text-3'}`}>{w.key}</span>
-                <span className="text-sm font-semibold">{w.date.getDate()}</span>
-                <span
-                  className="mt-1 h-1.5 w-1.5 rounded-full"
+        <div className="flex items-center gap-1">
+          <button aria-label="Previous week" onClick={() => shiftWeek(-1)} className="p-1 text-3">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="grid flex-1 grid-cols-7 gap-1">
+            {week.map((w) => {
+              const isSel = w.iso === selectedDate;
+              const st = dayStatus(w.iso, w.key);
+              return (
+                <button
+                  key={w.iso}
+                  onClick={() => onSelectDate(w.iso)}
+                  className="flex flex-col items-center rounded-xl py-2 transition"
                   style={{
-                    background: st === 'done' ? '#4ade80' : st === 'partial' ? '#fbbf24' : st === 'progress' ? 'var(--accent)' : plan.days[w.key].isRest ? 'transparent' : 'rgb(var(--ink-rgb) / 0.2)',
+                    background: isSel ? 'rgb(var(--ink-rgb) / 0.12)' : 'rgb(var(--ink-rgb) / 0.04)',
+                    border: `1px solid ${isSel ? 'rgb(var(--ink-rgb) / 0.25)' : 'rgb(var(--ink-rgb) / 0.06)'}`,
                   }}
-                />
-              </button>
-            );
-          })}
+                >
+                  <span className={`text-[11px] ${w.iso === today ? 'font-bold text-white' : 'text-3'}`}>{w.key}</span>
+                  <span className="text-sm font-semibold">{w.date.getDate()}</span>
+                  <span
+                    className="mt-1 h-1.5 w-1.5 rounded-full"
+                    style={{
+                      background:
+                        st === 'done'
+                          ? '#4ade80'
+                          : st === 'partial'
+                            ? '#fbbf24'
+                            : st === 'progress'
+                              ? 'var(--accent)'
+                              : plan.days[w.key].isRest
+                                ? 'transparent'
+                                : 'rgb(var(--ink-rgb) / 0.2)',
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+          <button aria-label="Next week" onClick={() => shiftWeek(1)} className="p-1 text-3">
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
-        <button aria-label="Next week" onClick={() => shiftWeek(1)} className="p-1 text-3">
-          <ChevronRight className="h-4 w-4" />
-        </button>
       </div>
 
       <div className="space-y-3">

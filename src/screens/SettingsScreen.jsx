@@ -108,7 +108,7 @@ export default function SettingsScreen() {
 
   return (
     <div className="space-y-5">
-      <header>
+      <header className="sticky-head">
         <h1 className="text-3xl font-bold">Settings</h1>
       </header>
 

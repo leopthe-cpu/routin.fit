@@ -5,7 +5,7 @@
 export default function Sky({ sky }) {
   return (
     <div aria-hidden="true" className="absolute inset-0" style={{ background: sky.base, transition: 'background 900ms ease' }}>
-      <div className="absolute inset-0" style={{ background: sky.glow }} />
+      <div className="sun-glow absolute inset-0" style={{ background: sky.glow }} />
       <div className="absolute inset-0" style={{ background: sky.haze }} />
       <svg className="absolute inset-0 h-full w-full" style={{ mixBlendMode: 'soft-light', opacity: 0.6 }}>
         <filter id="sky-grain">

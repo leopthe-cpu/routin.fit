@@ -119,8 +119,10 @@ export default function StretchFocus({ date, now }) {
   if (session?.endedAt) {
     return (
       <>
-        <FocusHeader fraction={total ? done / total : 0} />
-        <GlassCard className="mt-auto gap-3">
+        <div className="flex flex-1 items-center">
+          <FocusHeader fraction={total ? done / total : 0} />
+        </div>
+        <GlassCard className="gap-3">
           <p className="text-[30px] font-light leading-tight">
             {done >= total ? 'All done. Nice start.' : 'Ended early.'}
           </p>
@@ -174,12 +176,14 @@ export default function StretchFocus({ date, now }) {
 
   return (
     <>
-      <FocusHeader
-        phrase={index <= 0 && done === 0 && fraction < 0.05 ? startPhrase(key) : null}
-        fraction={progress}
-        elapsed={elapsed}
-      />
-      <div className="mt-auto flex flex-col gap-3 pt-4">
+      <div className="flex flex-1 items-center py-2">
+        <FocusHeader
+          phrase={index <= 0 && done === 0 && fraction < 0.05 ? startPhrase(key) : null}
+          fraction={progress}
+          elapsed={elapsed}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
         <div {...handlers} style={{ touchAction: 'pan-y' }}>
           <div
             key={index}

@@ -25,35 +25,36 @@ export default function SessionIsland({ now, onOpen }) {
         onClick={() => onOpen(active.kind, active.date)}
         aria-label={`Back to ${title}`}
         className="tile flex w-full flex-col gap-2 rounded-2xl px-4 pb-2.5 pt-3 text-left"
+        // Inverted colours so it stands out from the panel in both themes.
         style={{
-          background: 'var(--sheet)',
-          border: '1px solid var(--line)',
-          boxShadow: '0 14px 30px -16px rgba(0,0,0,0.5)',
+          background: 'rgb(var(--ink-rgb))',
+          color: 'var(--bg)',
+          boxShadow: '0 16px 34px -14px rgba(0,0,0,0.55)',
         }}
       >
         <span className="flex w-full items-center gap-3">
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-            style={{ background: 'rgb(var(--ink-rgb) / 0.08)' }}
+            style={{ background: 'color-mix(in srgb, var(--bg) 16%, transparent)' }}
           >
             <Icon className="h-4 w-4" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-[15px] font-medium">{title}</span>
-            <span className="label truncate text-[9px] text-2">
+            <span className="label truncate text-[9px] opacity-70">
               {status}
               {timed && timer.pausedAt ? ' · paused' : ''}
             </span>
           </span>
           <span className="text-[24px] font-light tabular-nums">{clock(time)}</span>
-          <ChevronUp className="h-4 w-4 shrink-0 text-3" />
+          <ChevronUp className="h-4 w-4 shrink-0 opacity-60" />
         </span>
-        <span className="block h-[3px] w-full overflow-hidden rounded-full" style={{ background: 'var(--track)' }}>
+        <span className="block h-[3px] w-full overflow-hidden rounded-full" style={{ background: 'color-mix(in srgb, var(--bg) 22%, transparent)' }}>
           <span
             className="block h-full rounded-full"
             style={{
               width: `${total ? (done / total) * 100 : 0}%`,
-              background: 'var(--text-1)',
+              background: 'var(--bg)',
               transition: 'width 900ms cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
           />
