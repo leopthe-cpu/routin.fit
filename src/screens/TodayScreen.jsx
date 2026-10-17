@@ -1,7 +1,7 @@
 import { AlarmClock, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus } from '../store';
 import { dayKeyOf, toISODate, weekDates } from '../lib/dates';
-import { estimateWorkoutMinutes } from '../lib/estimate';
+import { estimateWorkoutMinutes, shortTitle } from '../lib/estimate';
 import { morningMinutes } from '../lib/morning';
 import { useWeather } from '../hooks/useWeather';
 
@@ -75,10 +75,10 @@ function Tile({ label, value, sub, status, icon: Icon, tint, onClick, ariaLabel,
         <span
           aria-hidden="true"
           className="tile-chip flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-          style={{ background: done ? 'rgba(34,197,94,0.2)' : 'rgb(var(--ink-rgb) / 0.07)' }}
+          style={{ background: done ? 'var(--accent)' : 'rgb(var(--ink-rgb) / 0.07)', color: done ? 'var(--on-accent)' : undefined }}
         >
           {done ? (
-            <Check className="h-3.5 w-3.5" strokeWidth={3} style={{ color: '#16a34a' }} />
+            <Check className="h-3.5 w-3.5" strokeWidth={3} />
           ) : (
             <Icon className="h-3.5 w-3.5" strokeWidth={2} />
           )}
@@ -165,7 +165,7 @@ function Goals({ date, dayKey }) {
           >
             <span
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-              style={{ background: on ? 'rgba(34,197,94,0.9)' : 'transparent', border: `1px solid ${on ? 'transparent' : 'var(--text-3)'}`, color: '#fff' }}
+              style={{ background: on ? 'var(--accent)' : 'transparent', border: `1px solid ${on ? 'transparent' : 'var(--text-3)'}`, color: 'var(--on-accent)' }}
             >
               {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
             </span>
@@ -228,7 +228,7 @@ export default function TodayScreen({ now, sky, onOpen }) {
           />
           <Tile
             label="Workout"
-            value={day.exercises.length ? day.title : 'Rest day'}
+            value={day.exercises.length ? shortTitle(day.title) : 'Rest day'}
             sub={
               day.exercises.length
                 ? `${day.exercises.length} ex · ${estimateWorkoutMinutes(day.exercises)} min`

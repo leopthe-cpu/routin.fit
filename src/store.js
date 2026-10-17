@@ -74,6 +74,22 @@ export function sessionStatus(session) {
   return done >= total ? 'done' : 'partial';
 }
 
+/** Seconds of meditation done so far, not counting pauses. */
+export function meditationElapsed(m, now = Date.now()) {
+  if (!m) return 0;
+  return Math.max(0, ((m.pausedAt ?? now) - m.startedAt - m.pausedTotal) / 1000);
+}
+
+/** Length, time done and time left of a meditation, in seconds. */
+export function meditationProgress(m, now = Date.now()) {
+  const length = m.minutes * 60;
+  const elapsed = meditationElapsed(m, now);
+  return { length, elapsed, left: Math.max(0, length - elapsed) };
+}
+
+/** True while a meditation is under way (started and not finished). */
+export const meditationActive = (m) => !!m && !m.doneAt;
+
 /** Whole seconds left on a timer, counting a paused timer as stopped. */
 export function timerLeft(timer, now = Date.now()) {
   if (!timer) return 0;
@@ -107,6 +123,9 @@ export const useStore = create(
       goals: [],
       // Goal ticks per day: { 'YYYY-MM-DD|goalId': true }.
       goalChecks: {},
+      // A running meditation, so it survives minimizing:
+      // { type, minutes, sound, startedAt, pausedAt, pausedTotal, doneAt }.
+      meditation: null,
       // Current working weight per exercise key: { value, unit, updatedAt }. Stays until changed.
       weights: {},
       // Imported past workouts: [{ date, key, name, sets: [{ value, unit }] }]
@@ -129,6 +148,19 @@ export const useStore = create(
       setActivePlan: (id) => set({ activePlanId: id }),
       setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
       setLastPhrase: (i) => set({ lastPhrase: i }),
+
+      startMeditation: ({ type, minutes, sound }) =>
+        set({ meditation: { type, minutes, sound, startedAt: Date.now(), pausedAt: null, pausedTotal: 0, doneAt: null } }),
+      pauseMeditation: () =>
+        set((s) => (s.meditation && !s.meditation.pausedAt ? { meditation: { ...s.meditation, pausedAt: Date.now() } } : {})),
+      resumeMeditation: () =>
+        set((s) => {
+          const m = s.meditation;
+          if (!m?.pausedAt) return {};
+          return { meditation: { ...m, pausedTotal: m.pausedTotal + (Date.now() - m.pausedAt), pausedAt: null } };
+        }),
+      completeMeditation: () => set((s) => (s.meditation ? { meditation: { ...s.meditation, doneAt: Date.now() } } : {})),
+      clearMeditation: () => set({ meditation: null }),
 
       addGoal: (title, days) =>
         set((s) => ({
@@ -403,6 +435,7 @@ export const useStore = create(
         lastPhrase: s.lastPhrase,
         goals: s.goals,
         goalChecks: s.goalChecks,
+        meditation: s.meditation,
       }),
     },
   ),

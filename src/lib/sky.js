@@ -64,8 +64,8 @@ export function greetingFor(slot) {
 export function glassFor(sky) {
   const dark = sky.ink === '#FFFFFF' || sky.ink === '#F2F6FF';
   return dark
-    ? { bg: 'rgba(255,255,255,0.16)', border: 'rgba(255,255,255,0.38)', btn: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.3)', onInk: '#1A1F3A', inkRgb: '242 246 255' }
-    : { bg: 'rgba(255,255,255,0.32)', border: 'rgba(255,255,255,0.6)', btn: 'rgba(255,255,255,0.35)', track: 'rgba(20,32,46,0.15)', onInk: '#FFFFFF', inkRgb: hexToRgb(sky.ink) };
+    ? { bg: 'rgba(255,255,255,0.16)', border: 'rgba(255,255,255,0.38)', btn: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.3)', onInk: '#1A1F3A', inkRgb: '242 246 255', solid: 'rgba(18, 24, 52, 0.8)' }
+    : { bg: 'rgba(255,255,255,0.32)', border: 'rgba(255,255,255,0.6)', btn: 'rgba(255,255,255,0.35)', track: 'rgba(20,32,46,0.15)', onInk: '#FFFFFF', inkRgb: hexToRgb(sky.ink), solid: 'rgba(255, 255, 255, 0.86)' };
 }
 
 function hexToRgb(hex) {

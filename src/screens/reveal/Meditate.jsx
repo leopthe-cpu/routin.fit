@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Pause, Play, RotateCcw } from 'lucide-react';
-import { useStore } from '../../store';
+import { useStore, meditationProgress } from '../../store';
 import { clock } from '../../lib/clock';
-import { blip, startAmbient, stopAmbient } from '../../lib/ambient';
+import { startAmbient } from '../../lib/ambient';
 import { GlassButton, GlassCard } from './parts';
 
 // Breath patterns in seconds. Box breathing for "Breathing"; the others use a
@@ -76,35 +76,13 @@ function BreathSun({ sky, kind, seconds }) {
   );
 }
 
-function Run({ type, minutes, sky, now, onDone }) {
-  const length = minutes * 60;
-  const [startedAt] = useState(() => Date.now());
-  const [paused, setPaused] = useState(null); // time it was paused
-  const [pausedTotal, setPausedTotal] = useState(0);
-  const finished = useRef(false);
-
-  const at = paused ?? now;
-  const elapsed = Math.max(0, (at - startedAt - pausedTotal) / 1000);
-  const left = Math.max(0, length - elapsed);
-  const phase = phaseAt(type, Math.floor(elapsed));
-  const guides = GUIDES[type] ?? GUIDES.Mindfulness;
+function Run({ m, sky, now }) {
+  const { pauseMeditation, resumeMeditation } = useStore();
+  const { elapsed, left } = meditationProgress(m, now);
+  const paused = !!m.pausedAt;
+  const phase = phaseAt(m.type, Math.floor(elapsed));
+  const guides = GUIDES[m.type] ?? GUIDES.Mindfulness;
   const guide = guides[Math.floor(elapsed / 20) % guides.length];
-
-  useEffect(() => {
-    if (left <= 0 && !finished.current) {
-      finished.current = true;
-      blip(true);
-      stopAmbient();
-      onDone();
-    }
-  }, [left, onDone]);
-
-  const toggle = () => {
-    if (paused) {
-      setPausedTotal((t) => t + (Date.now() - paused));
-      setPaused(null);
-    } else setPaused(Date.now());
-  };
 
   return (
     <>
@@ -115,7 +93,7 @@ function Run({ type, minutes, sky, now, onDone }) {
       </div>
       <div className="flex items-center justify-between gap-3 pb-1">
         <span className="text-[40px] font-light tabular-nums">{clock(Math.ceil(left))}</span>
-        <GlassButton onClick={toggle} aria-label={paused ? 'Resume' : 'Pause'}>
+        <GlassButton onClick={paused ? resumeMeditation : pauseMeditation} aria-label={paused ? 'Resume' : 'Pause'}>
           {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
           {paused ? 'Resume' : 'Pause'}
         </GlassButton>
@@ -126,35 +104,24 @@ function Run({ type, minutes, sky, now, onDone }) {
 
 /**
  * Pick a practice, then Begin counts 3-2-1 into a timed session: a breath cue,
- * a short guide line, and the sun swelling and fading with the breath.
+ * a short guide line, and the sun swelling and fading with the breath. The
+ * session lives in the store, so minimizing keeps it (and its sound) going.
  */
 export default function Meditate({ sky, now, countdown }) {
   const musicOn = useStore((s) => s.settings.music);
+  const m = useStore((s) => s.meditation);
+  const { startMeditation, clearMeditation } = useStore();
   const [picked, setPicked] = useState({ Type: 'Breathing', Length: '5 min', Sound: musicOn ? 'Rain' : 'Silence' });
-  const [stage, setStage] = useState('setup'); // setup | run | done
 
-  // Leaving the view stops the sound.
-  useEffect(() => () => stopAmbient(), []);
-
-  if (stage === 'run') {
-    return (
-      <Run
-        type={picked.Type}
-        minutes={parseInt(picked.Length, 10)}
-        sky={sky}
-        now={now}
-        onDone={() => setStage('done')}
-      />
-    );
-  }
-  if (stage === 'done') {
+  if (m && !m.doneAt) return <Run m={m} sky={sky} now={now} />;
+  if (m?.doneAt) {
     return (
       <GlassCard className="mt-auto gap-3">
         <p className="text-[30px] font-light leading-tight">Session complete.</p>
         <p className="text-[16px] opacity-85">
-          {picked.Length} of {picked.Type.toLowerCase()}. Take a moment before you get up.
+          {m.minutes} min of {m.type.toLowerCase()}. Take a moment before you get up.
         </p>
-        <GlassButton className="self-start" onClick={() => setStage('setup')}>
+        <GlassButton className="self-start" onClick={clearMeditation}>
           <RotateCcw className="h-4 w-4" /> Again
         </GlassButton>
       </GlassCard>
@@ -164,7 +131,9 @@ export default function Meditate({ sky, now, countdown }) {
   const begin = () => {
     // Sound has to start inside the tap.
     if (picked.Sound === 'Rain') startAmbient();
-    countdown(() => setStage('run'));
+    countdown(() =>
+      startMeditation({ type: picked.Type, minutes: parseInt(picked.Length, 10), sound: picked.Sound }),
+    );
   };
 
   return (

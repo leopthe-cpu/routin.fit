@@ -112,7 +112,7 @@ const STRETCH_RULES = [
   ['hamstrings', /hamstring|toe touch/i],
 ];
 
-function stretchAreas(items) {
+export function stretchAreas(items) {
   const found = [];
   for (const item of items) {
     for (const [area, re] of STRETCH_RULES) if (re.test(item) && !found.includes(area)) found.push(area);
@@ -134,4 +134,16 @@ export function morningCopy(morning) {
     detail: parts.join(' · '),
     minutes: morningMinutes(morning),
   };
+}
+
+/**
+ * A day title short enough for a small tile: kept as written when it fits,
+ * otherwise its first part plus "+" ("Upper Body, Forearms & Rear Delts" →
+ * "Upper Body +").
+ */
+export function shortTitle(title, max = 16) {
+  if (!title || title.length <= max) return title;
+  const first = title.split(/\s*(?:,|&|\+|\/| and )\s*/i)[0].trim();
+  if (first && first.length <= max - 2) return `${first} +`;
+  return `${title.slice(0, max - 1).trimEnd()}…`;
 }

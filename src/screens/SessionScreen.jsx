@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, ChevronLeft, Clock, ExternalLink, Play, RotateCcw, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, Clock, ExternalLink, PersonStanding, Play, RotateCcw, Trash2 } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, morningMinutes, moveSeconds } from '../store';
 import { estimateWorkoutMinutes, restSecondsFor, toBlocks } from '../lib/estimate';
 import { fromISODate } from '../lib/dates';
@@ -7,25 +7,36 @@ import { formLinks } from '../lib/youtube';
 import { findStretch } from '../data/stretches';
 import WeightControl from '../components/WeightControl';
 
-function FormLinks({ name }) {
+/** A "Form" chip; tapping it shows links to form videos underneath. */
+function FormChip({ name }) {
+  const [open, setOpen] = useState(false);
   const links = formLinks(name);
   return (
-    <div className="flex shrink-0 items-center gap-1">
-      {links.map((l) => (
-        <a
-          key={l.url}
-          href={l.url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Watch ${l.label} form on YouTube`}
-          title={l.label}
-          className="flex items-center gap-1 rounded-lg p-1 text-3 hover:text-white"
-        >
-          <ExternalLink className="h-4 w-4" />
-          {links.length > 1 && <span className="max-w-[4.5rem] truncate text-[10px]">{l.label.split(' ')[0]}</span>}
-        </a>
-      ))}
-    </div>
+    <span className="contents">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="pill gap-1"
+        style={{ background: 'transparent', border: '1px solid rgb(var(--ink-rgb) / 0.28)', color: 'var(--text-2)' }}
+      >
+        <PersonStanding className="h-3.5 w-3.5" /> Form
+      </button>
+      {open && (
+        <span className="flex basis-full flex-col gap-1 pt-1">
+          {links.map((l) => (
+            <a
+              key={l.url}
+              href={l.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-2 underline underline-offset-4"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> {l.label} on YouTube
+            </a>
+          ))}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -43,9 +54,11 @@ function Elapsed({ since }) {
   return <span className="tabular-nums">{h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`}</span>;
 }
 
+// Done sets are filled with the ink colour: calm, and not a "success green".
 const dotStyle = (on) => ({
-  background: on ? 'rgba(34,197,94,0.9)' : 'rgb(var(--ink-rgb) / 0.06)',
-  border: `1px solid ${on ? 'rgba(74,222,128,0.9)' : 'rgb(var(--ink-rgb) / 0.15)'}`,
+  background: on ? 'var(--accent)' : 'rgb(var(--ink-rgb) / 0.06)',
+  color: on ? 'var(--on-accent)' : undefined,
+  border: `1px solid ${on ? 'transparent' : 'rgb(var(--ink-rgb) / 0.15)'}`,
 });
 
 const playStyle = { background: 'var(--accent-grad)', color: 'var(--on-accent)', border: '1px solid rgb(var(--ink-rgb) / 0.25)' };
@@ -78,34 +91,28 @@ function ExerciseCard({ ex, session, finished, playFirst, onToggle, onPick }) {
   const complete = done.length >= ex.sets;
   return (
     <div className={`glass p-4 ${complete ? 'glass-done' : ''}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h4 className="font-semibold leading-snug">{ex.name}</h4>
-          {ex.note && <p className="mt-0.5 text-xs text-3">{ex.note}</p>}
-        </div>
-        <FormLinks name={ex.name} />
-      </div>
+      <h4 className="font-semibold leading-snug">{ex.name}</h4>
+      {ex.note && <p className="mt-0.5 text-xs text-3">{ex.note}</p>}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="pill" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>
+        <span className="pill" style={{ background: 'rgb(var(--ink-rgb) / 0.1)', color: 'var(--text-1)' }}>
           {ex.sets} × {ex.target.label}
         </span>
-        {!ex.supersetGroup && <span className="text-xs text-3">rest {restSecondsFor(ex)} s</span>}
-      </div>
-      <div className="mt-3">
         <WeightControl name={ex.name} planWeight={ex.startWeight} />
+        {!ex.supersetGroup && <span className="text-xs text-3">rest {restSecondsFor(ex)} s</span>}
+        <FormChip name={ex.name} />
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex items-center justify-between gap-2">
         <SetDots count={ex.sets} done={done} disabled={finished} playFirst={playFirst} onToggle={(i) => onToggle(ex.id, i)} />
+        {onPick && !finished && !complete && (
+          <button
+            onClick={() => onPick(ex.id)}
+            className="flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium"
+            style={{ border: '1px solid var(--card-border)' }}
+          >
+            <Play className="h-3 w-3" fill="currentColor" /> Do next
+          </button>
+        )}
       </div>
-      {onPick && !finished && !complete && (
-        <button
-          onClick={() => onPick(ex.id)}
-          className="mt-3 flex min-h-[40px] items-center gap-1.5 rounded-full px-3.5 text-sm font-medium"
-          style={{ border: '1px solid var(--card-border)' }}
-        >
-          <Play className="h-3.5 w-3.5" fill="currentColor" /> Do this one next
-        </button>
-      )}
     </div>
   );
 }
@@ -115,17 +122,14 @@ function MoveCard({ name, index, on, timing, seconds, finished, playable, onTick
   const title = stretch?.name ?? name.charAt(0).toUpperCase() + name.slice(1);
   return (
     <div className={`glass p-4 ${on ? 'glass-done' : ''}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h4 className="font-semibold leading-snug">
-            <span className="mr-1.5 text-3">{index + 1}.</span>
-            {title}
-          </h4>
-          {stretch && <p className="mt-1 text-xs text-2">{stretch.what}</p>}
-        </div>
-        <FormLinks name={name} />
+      <h4 className="font-semibold leading-snug">
+        <span className="mr-1.5 text-3">{index + 1}.</span>
+        {title}
+      </h4>
+      {stretch && <p className="mt-1 text-xs text-2">{stretch.what}</p>}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <FormChip name={name} />
       </div>
-      {stretch && <p className="mt-2 text-xs leading-relaxed text-3">{stretch.benefit}</p>}
       <div className="mt-3 flex items-center gap-3">
         <button
           disabled={finished}
@@ -250,7 +254,7 @@ export default function SessionScreen({ date, kind, onBack, embedded = false, on
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${total ? (done / total) * 100 : 0}%`,
-                  background: finished ? (done >= total ? '#22c55e' : '#fbbf24') : 'var(--accent-grad)',
+                  background: finished ? (done >= total ? 'var(--accent)' : '#fbbf24') : 'var(--accent-grad)',
                 }}
               />
             </div>

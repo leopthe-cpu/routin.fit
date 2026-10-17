@@ -95,7 +95,8 @@ export function FlipCard({ face, render, className = '' }) {
     <div
       className={`sky-glass flex flex-col gap-3 rounded-[26px] p-5 text-left ${className}`}
       style={{
-        transform: `perspective(1200px) rotateY(${turning ? 90 : 0}deg)`,
+        // Only transformed mid-turn: a resting 3D transform would switch off the frosted blur.
+        transform: turning ? 'perspective(1200px) rotateY(90deg)' : 'none',
         transition: 'transform 180ms ease-in-out',
       }}
     >
@@ -138,17 +139,13 @@ export function FocusHeader({ phrase, fraction, elapsed }) {
   );
 }
 
-/** Previous / next under the card, for people who'd rather tap than swipe. */
-export function StepNav({ onPrev, onNext, canPrev, canNext, children }) {
+/** Under the card: where you are, with arrows hinting that the card swipes. */
+export function SwipeHint({ canPrev, canNext, children }) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <GlassButton onClick={onPrev} disabled={!canPrev} aria-label="Previous">
-        <ChevronLeft className="h-4 w-4" /> Back
-      </GlassButton>
-      {children}
-      <GlassButton onClick={onNext} disabled={!canNext} aria-label="Next">
-        Next <ChevronRight className="h-4 w-4" />
-      </GlassButton>
+    <div className="label flex items-center justify-center gap-3 text-[10px] opacity-70" aria-hidden="true">
+      <ChevronLeft className="h-3.5 w-3.5" style={{ opacity: canPrev ? 1 : 0.25 }} />
+      <span>{children}</span>
+      <ChevronRight className="h-3.5 w-3.5" style={{ opacity: canNext ? 1 : 0.25 }} />
     </div>
   );
 }

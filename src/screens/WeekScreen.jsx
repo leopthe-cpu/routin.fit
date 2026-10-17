@@ -102,7 +102,7 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
                     style={{
                       background:
                         st === 'done'
-                          ? '#4ade80'
+                          ? 'var(--text-1)'
                           : st === 'partial'
                             ? '#fbbf24'
                             : st === 'progress'

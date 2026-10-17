@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useStore } from './store';
+import { useStore, meditationActive, meditationProgress, sessionProgress } from './store';
 import { todayISO } from './lib/dates';
 import { SKIES, greetingFor, pickPhrase, PHRASES, slotFor } from './lib/sky';
-import { startAmbient, stopAmbient } from './lib/ambient';
+import { blip, startAmbient, stopAmbient } from './lib/ambient';
 import Sky from './components/Sky';
 import TimerBar from './components/TimerBar';
 import SessionIsland from './components/SessionIsland';
@@ -102,6 +102,57 @@ function usePhrase() {
   return PHRASES[index];
 }
 
+/** The session or meditation currently under way, if any. */
+function ongoing() {
+  const st = useStore.getState();
+  const a = st.activeSessionKey && st.sessions[st.activeSessionKey];
+  if (a && !a.endedAt) return { kind: a.kind, key: a.key, date: a.date };
+  if (meditationActive(st.meditation)) return { kind: 'meditate' };
+  return null;
+}
+
+/** Keep the background sound when a stretch or a meditation with sound is still running. */
+function soundKeepsGoing() {
+  const st = useStore.getState();
+  const a = st.activeSessionKey && st.sessions[st.activeSessionKey];
+  if (a && !a.endedAt && a.kind === 'morning') return true;
+  return meditationActive(st.meditation) && st.meditation.sound === 'Rain';
+}
+
+const KIND_NAME = { morning: 'stretch', workout: 'workout', meditate: 'meditation' };
+
+function OneThingDialog({ busy, want, onCancel, onGoBack, onSwitch }) {
+  const name = KIND_NAME[busy.kind];
+  const sameKind = busy.kind === want;
+  return (
+    <div className="absolute inset-0 z-40 flex items-end justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="one-thing">
+      <button className="absolute inset-0 bg-black/40" aria-label="Cancel" onClick={onCancel} />
+      <div
+        className="relative mb-[env(safe-area-inset-bottom)] w-full max-w-sm rounded-3xl p-5"
+        style={{ background: 'var(--bg)', color: 'var(--text-1)', boxShadow: '0 20px 50px -10px rgba(0,0,0,0.5)' }}
+      >
+        <p id="one-thing" className="text-[22px] font-medium leading-tight">
+          Your {name} is still going
+        </p>
+        <p className="mt-1.5 text-[15px] text-2">
+          One thing at a time. Finish it first, or end it to start {sameKind ? 'this one' : `your ${KIND_NAME[want]}`}.
+        </p>
+        <div className="mt-4 flex flex-col gap-2">
+          <button onClick={onGoBack} className="btn-primary h-12 text-[16px]">
+            Back to my {name}
+          </button>
+          <button onClick={onSwitch} className="btn-ghost h-12 text-[16px]">
+            End it and start {sameKind ? 'this one' : `the ${KIND_NAME[want]}`}
+          </button>
+          <button onClick={onCancel} className="h-10 text-[15px] text-2">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const now = useTicker();
   const slot = useSlot(now);
@@ -132,10 +183,10 @@ export default function App() {
   // Back button / swipe-back closes a revealed view instead of leaving the app.
   useEffect(() => {
     const onPop = () => {
-      // Minimizing a running stretch keeps its sound; anything else goes quiet.
+      // Minimizing a running stretch or meditation keeps its sound; anything else goes quiet.
+      if (!soundKeepsGoing()) stopAmbient();
       const st = useStore.getState();
-      const a = st.activeSessionKey && st.sessions[st.activeSessionKey];
-      if (!(a && !a.endedAt && a.kind === 'morning')) stopAmbient();
+      if (st.meditation?.doneAt) st.clearMeditation();
       setReveal(null);
     };
     window.addEventListener('popstate', onPop);
@@ -144,6 +195,13 @@ export default function App() {
 
   const open = useCallback(
     (kind, opts = {}) => {
+      // One thing at a time: a different session (or meditation) still running asks first.
+      const date0 = opts.date ?? todayISO();
+      const busy = ongoing();
+      if (!opts.force && busy && (busy.kind !== kind || (busy.key && busy.key !== `${date0}|${kind}`))) {
+        setConflict({ busy, want: { kind, opts } });
+        return;
+      }
       window.history.pushState({ reveal: kind }, '');
       // Stretch and workout open on the day's list, where Start counts down into
       // focus. A session already under way goes straight back to its focus view.
@@ -156,11 +214,35 @@ export default function App() {
     [],
   );
 
-  // A stretch that finishes while minimized stops its sound.
+  const [conflict, setConflict] = useState(null); // { busy, want }
+
+  // A stretch or meditation that finishes while minimized stops its sound.
+  const medActive = useStore((s) => meditationActive(s.meditation));
   useEffect(() => {
     if (reveal?.kind === 'meditate' || reveal?.kind === 'morning') return;
-    if (activeKind !== 'morning') stopAmbient();
-  }, [activeKind, reveal?.kind]);
+    if (!soundKeepsGoing()) stopAmbient();
+  }, [activeKind, medActive, reveal?.kind]);
+
+  // A meditation ends on time even when it's minimized.
+  const meditation = useStore((s) => s.meditation);
+  useEffect(() => {
+    if (!meditationActive(meditation) || meditation.pausedAt) return;
+    if (meditationProgress(meditation, now).left <= 0) {
+      useStore.getState().completeMeditation();
+      blip(true);
+      stopAmbient();
+    }
+  }, [meditation, now]);
+
+  /** Stop whatever is running so something else can start. */
+  const endOngoing = (busy) => {
+    const st = useStore.getState();
+    if (busy.kind === 'meditate') st.clearMeditation();
+    // Nothing ticked yet: drop it rather than leave an "ended early" session behind.
+    else if (sessionProgress(st.sessions[busy.key]).done === 0) st.discardSession(busy.key);
+    else st.finishSession(busy.key);
+    stopAmbient();
+  };
   const close = () => window.history.back();
 
   const toggleMusic = () => {
@@ -289,6 +371,25 @@ export default function App() {
           {!reveal && <SessionIsland now={now} onOpen={(kind, date) => open(kind, { date })} />}
         </div>
       </div>
+
+      {conflict && (
+        <OneThingDialog
+          busy={conflict.busy}
+          want={conflict.want.kind}
+          onCancel={() => setConflict(null)}
+          onGoBack={() => {
+            const b = conflict.busy;
+            setConflict(null);
+            open(b.kind, { date: b.date, force: true });
+          }}
+          onSwitch={() => {
+            const { busy, want } = conflict;
+            setConflict(null);
+            endOngoing(busy);
+            open(want.kind, { ...want.opts, force: true });
+          }}
+        />
+      )}
 
       {reveal && (
         <RevealOverlay

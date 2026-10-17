@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Clock, ExternalLink, Info, PersonStanding, Plus, RotateCcw, Repeat } from 'lucide-react';
+import { Clock, ExternalLink, Info, PersonStanding, Plus, RotateCcw, Repeat } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, timerLeft, moveSeconds } from '../../store';
 import { dayKeyOf, fromISODate } from '../../lib/dates';
 import { findStretch } from '../../data/stretches';
@@ -7,7 +7,7 @@ import { cueAt, startPhrase } from '../../lib/flow';
 import { formLinks } from '../../lib/youtube';
 import { clock } from '../../lib/clock';
 import { useSwipe } from '../../hooks/useSwipe';
-import { Bar, Chip, FlipCard, FocusHeader, GlassButton, GlassCard, StepNav } from './parts';
+import { Bar, Chip, FlipCard, FocusHeader, GlassButton, GlassCard, SwipeHint } from './parts';
 
 const titleOf = (name) => findStretch(name)?.name ?? name.charAt(0).toUpperCase() + name.slice(1);
 
@@ -171,6 +171,11 @@ export default function StretchFocus({ date, now }) {
       <Chip icon={PersonStanding} tone="soft" active={face === 'form'} onClick={() => toggle('form')}>
         Form
       </Chip>
+      {running && (
+        <Chip icon={Plus} tone="line" onClick={() => adjustTimer(15)}>
+          15 s
+        </Chip>
+      )}
     </div>
   );
 
@@ -249,21 +254,9 @@ export default function StretchFocus({ date, now }) {
             />
           </div>
         </div>
-        <StepNav
-          onPrev={() => goTo(index - 1)}
-          onNext={() => goTo(index + 1)}
-          canPrev={index > 0}
-          canNext={index < content.items.length - 1 || running}
-        >
-          <GlassButton onClick={() => adjustTimer(15)} disabled={!running} aria-label="Add 15 seconds">
-            <Plus className="h-4 w-4" /> 15 s
-          </GlassButton>
-        </StepNav>
-        {done > 0 && (
-          <span className="label flex items-center justify-center gap-1.5 text-[10px] opacity-70">
-            <Check className="h-3 w-3" /> {done} of {total} done
-          </span>
-        )}
+        <SwipeHint canPrev={index > 0} canNext={index < content.items.length - 1 || running}>
+          {done} of {total} done
+        </SwipeHint>
       </div>
     </>
   );

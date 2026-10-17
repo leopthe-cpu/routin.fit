@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Check,
+  ChevronRight,
   ExternalLink,
   Lightbulb,
   Link2,
@@ -22,7 +23,7 @@ import { displayWeight, formatWeight, roundTo, STEP } from '../../lib/units';
 import { formLinks } from '../../lib/youtube';
 import { clock } from '../../lib/clock';
 import { useSwipe } from '../../hooks/useSwipe';
-import { Bar, Chip, FlipCard, FocusHeader, GlassButton, GlassCard, StepNav } from './parts';
+import { Bar, Chip, FlipCard, FocusHeader, GlassButton, GlassCard, SwipeHint } from './parts';
 
 function BigWeight({ ex }) {
   const wkey = exerciseKey(ex.name);
@@ -155,7 +156,8 @@ function SetCard({ step, exercises, done, face, setFace, nextLabel, onNext, onUn
                   className="flex h-[60px] items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
                   style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
                 >
-                  <span className="truncate px-3">{nextLabel}</span>
+                  <span className="truncate pl-3">{nextLabel}</span>
+                  <ChevronRight className="mr-2 h-5 w-5 shrink-0" />
                 </button>
               )}
             </>
@@ -398,13 +400,6 @@ export default function WorkoutFocus({ date, now, focusExId }) {
     );
   }
 
-  // The Next button does what the card's main button does now.
-  const next = () => {
-    if (viewingPast) move(1);
-    else if (showRest) clearTimer();
-    else if (step && !isDone(step)) complete(step);
-  };
-
   return (
     <>
       {/* The header sits centred in the space above the card. */}
@@ -436,16 +431,9 @@ export default function WorkoutFocus({ date, now, focusExId }) {
             </div>
           )}
         </div>
-        <StepNav
-          onPrev={() => move(-1)}
-          onNext={next}
-          canPrev={backIdx > 0}
-          canNext={viewingPast || showRest || (!!step && !isDone(step))}
-        >
-          <span className="label text-[10px] opacity-70">
-            {done} / {total}
-          </span>
-        </StepNav>
+        <SwipeHint canPrev={backIdx > 0} canNext={viewingPast || showRest}>
+          {done} of {total} sets
+        </SwipeHint>
       </div>
     </>
   );

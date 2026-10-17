@@ -3,7 +3,7 @@ import { Check, Clock, Play } from 'lucide-react';
 const STATUS_STYLE = {
   todo: null,
   progress: { label: 'In progress', color: 'var(--accent)' },
-  done: { label: 'Done', color: '#4ade80' },
+  done: { label: 'Done', color: 'var(--text-1)' },
   partial: { label: 'Ended early', color: '#fbbf24' },
 };
 
@@ -20,8 +20,8 @@ export default function DayCard({ icon: Icon, accent, title, subtitle, detail, m
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{
-            background: done ? 'rgba(34,197,94,0.18)' : partial ? 'rgba(251,191,36,0.15)' : 'rgb(var(--ink-rgb) / 0.07)',
-            color: done ? '#4ade80' : partial ? '#fbbf24' : accent,
+            background: done ? 'rgb(var(--ink-rgb) / 0.12)' : partial ? 'rgba(251,191,36,0.15)' : 'rgb(var(--ink-rgb) / 0.07)',
+            color: done ? 'var(--text-1)' : partial ? '#fbbf24' : accent,
           }}
         >
           {done || partial ? <Check className="h-5 w-5" strokeWidth={3} /> : <Icon className="h-5 w-5" />}

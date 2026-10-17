@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, List, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { ChevronDown, Clock, List, PersonStanding, Play, Repeat, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { useStore, sessionKey } from '../../store';
 import { glassFor } from '../../lib/sky';
 import { dayKeyOf, fromISODate } from '../../lib/dates';
-import { estimateWorkoutMinutes, totalSets } from '../../lib/estimate';
+import { estimateWorkoutMinutes, musclesFor, stretchAreas, totalSets } from '../../lib/estimate';
+import BodyMap from '../../components/BodyMap';
 import { morningMinutes } from '../../lib/morning';
 import { blip, startAmbient } from '../../lib/ambient';
 import SessionScreen from '../SessionScreen';
@@ -13,7 +14,7 @@ import WorkoutFocus from './WorkoutFocus';
 import { AlarmsPreview } from './Previews';
 import Meditate from './Meditate';
 import { useSwipe } from '../../hooks/useSwipe';
-import { GlassButton } from './parts';
+import { Chip, FlipCard, GlassButton } from './parts';
 
 /** Theme variables so everything inside reads well on the current sky, including the reused list view. */
 function skyVars(sky) {
@@ -30,6 +31,7 @@ function skyVars(sky) {
     '--glass-bg': g.bg,
     '--glass-border': g.border,
     '--glass-btn': g.btn,
+    '--glass-solid': g.solid,
     '--card-bg': g.bg,
     '--card-border': g.border,
     '--card-shadow': 'none',
@@ -54,52 +56,88 @@ function useContent(date, kind) {
   return { content: day?.exercises.length ? { title: day.title, exercises: day.exercises } : null };
 }
 
-/** Title card above the list: what this session is, and the button that starts it. */
+const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+
+/**
+ * Title card above the list: what this session is, and the button that starts
+ * it. It stays pinned while the list scrolls under it; the muscle chip turns
+ * it over to show the worked areas on a body map.
+ */
 function ListHeader({ date, kind, onStart }) {
   const { session, content } = useContent(date, kind);
   const discardSession = useStore((s) => s.discardSession);
+  const [face, setFace] = useState('front');
   if (!content) return null;
   const morning = kind === 'morning';
   const minutes = morning ? morningMinutes(content) : estimateWorkoutMinutes(content.exercises);
   const size = morning
     ? `${content.items.length} moves`
     : `${content.exercises.length} exercises · ${totalSets(content.exercises)} sets`;
+  const areas = morning ? stretchAreas(content.items) : musclesFor(content.exercises);
   const action = !session ? 'Start' : session.endedAt ? null : 'Resume';
   const when = fromISODate(date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' });
+  const toggle = () => setFace((f) => (f === 'front' ? 'muscles' : 'front'));
+
+  const chips = (
+    <div className="flex flex-wrap gap-1.5">
+      {areas.length > 0 && (
+        <Chip icon={PersonStanding} tone="solid" active={face === 'muscles'} onClick={toggle}>
+          {areas.map(cap).join(' · ')}
+        </Chip>
+      )}
+      <Chip icon={Clock} tone="soft">
+        ≈ {minutes} min
+      </Chip>
+      <Chip icon={Repeat} tone="line">
+        {size}
+      </Chip>
+    </div>
+  );
 
   return (
-    <div className="sky-glass flex flex-col gap-2 rounded-[26px] p-5">
-      <span className="label opacity-80">
-        {morning ? 'Stretch' : 'Workout'} · {when}
-      </span>
-      <h1 className="text-[30px] font-medium leading-[1.08]">{content.title}</h1>
-      <p className="text-[15px] opacity-85">
-        ≈ {minutes} min · {size}
-      </p>
-      <div className="mt-2 flex gap-2">
-        {action && (
-          <button
-            onClick={() => onStart(!session)}
-            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
-            style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
-          >
-            <Play className="h-5 w-5" fill="currentColor" /> {action}
-          </button>
-        )}
-        {session && (
-          <button
-            onClick={() => {
-              if (confirm('Restart from scratch? Everything ticked in this session is cleared.')) {
-                discardSession(sessionKey(date, kind));
-              }
-            }}
-            className={`sky-glass flex h-14 items-center justify-center gap-2 rounded-[18px] px-5 text-[16px] ${action ? '' : 'flex-1'}`}
-          >
-            <RotateCcw className="h-4 w-4" /> Restart
-          </button>
-        )}
-      </div>
-    </div>
+    <FlipCard
+      face={face}
+      className="list-head !gap-2.5"
+      render={(f) => (
+        <>
+          <span className="label opacity-80">
+            {morning ? 'Stretch' : 'Workout'} · {when}
+          </span>
+          <h1 className="text-[26px] font-medium leading-[1.1]">{content.title}</h1>
+          {chips}
+          {f === 'muscles' ? (
+            <button onClick={toggle} className="flex flex-col gap-2 pt-1 text-left" aria-label="Turn back">
+              <BodyMap muscles={areas} />
+              <span className="label text-center text-[10px] opacity-70">Tap to turn back</span>
+            </button>
+          ) : (
+            <div className="mt-1 flex gap-2">
+              {action && (
+                <button
+                  onClick={() => onStart(!session)}
+                  className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
+                  style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+                >
+                  <Play className="h-5 w-5" fill="currentColor" /> {action}
+                </button>
+              )}
+              {session && (
+                <button
+                  onClick={() => {
+                    if (confirm('Restart from scratch? Everything ticked in this session is cleared.')) {
+                      discardSession(sessionKey(date, kind));
+                    }
+                  }}
+                  className={`sky-glass flex h-[52px] items-center justify-center gap-2 rounded-[18px] px-5 text-[16px] ${action ? '' : 'flex-1'}`}
+                >
+                  <RotateCcw className="h-4 w-4" /> Restart
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    />
   );
 }
 
@@ -228,8 +266,10 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
       >
         {isSession && reveal.list ? (
           <>
-            <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-3">
-              <ListHeader date={date} kind={kind} onStart={start} />
+            <div className="no-scrollbar mt-2 min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
+              <div className="sticky top-0 z-10">
+                <ListHeader date={date} kind={kind} onStart={start} />
+              </div>
               <SessionScreen
                 date={date}
                 kind={kind}
