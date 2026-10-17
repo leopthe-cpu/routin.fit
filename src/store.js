@@ -337,7 +337,7 @@ export const useStore = create(
     }),
     {
       name: 'workout-app',
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
         // v2: drop the vague "Hyper-mobility & posture flow" move from saved plans.
         if (version < 2 && persisted?.plans) {
@@ -357,6 +357,18 @@ export const useStore = create(
               ? { ...p, sourceText: DEFAULT_PLAN_TEXT, days: parsePlanText(DEFAULT_PLAN_TEXT).days }
               : p,
           );
+        }
+        // v4: one-off reset of the most recently started session (the owner's
+        // test run on 16–17 Oct 2026) so it can be started again from scratch.
+        if (version < 4 && persisted?.sessions) {
+          const latest = Object.values(persisted.sessions)
+            .filter((x) => x.date >= '2026-10-16')
+            .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))[0];
+          if (latest) {
+            delete persisted.sessions[latest.key];
+            if (persisted.activeSessionKey === latest.key) persisted.activeSessionKey = null;
+            if (persisted.timer?.sessionKey === latest.key) persisted.timer = null;
+          }
         }
         return persisted;
       },

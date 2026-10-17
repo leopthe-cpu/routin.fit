@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { List, Play, Volume2, VolumeX, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, List, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { useStore, sessionKey } from '../../store';
 import { glassFor } from '../../lib/sky';
 import { dayKeyOf, fromISODate } from '../../lib/dates';
@@ -10,7 +10,9 @@ import SessionScreen from '../SessionScreen';
 import TimerBar from '../../components/TimerBar';
 import StretchFocus from './StretchFocus';
 import WorkoutFocus from './WorkoutFocus';
-import { AlarmsPreview, MeditatePreview } from './Previews';
+import { AlarmsPreview } from './Previews';
+import Meditate from './Meditate';
+import { useSwipe } from '../../hooks/useSwipe';
 import { GlassButton } from './parts';
 
 /** Theme variables so everything inside reads well on the current sky, including the reused list view. */
@@ -45,7 +47,9 @@ function useContent(date, kind) {
   const day = plan?.days[dayKeyOf(fromISODate(date))];
   if (session) return { session, content: session.snapshot };
   if (kind === 'morning') {
-    return { content: day?.morning && { title: 'Morning stretches', minutes: day.morning.minutes, items: day.morning.items } };
+    return {
+      content: day?.morning && { title: 'Morning stretches', minutes: day.morning.minutes, items: day.morning.items },
+    };
   }
   return { content: day?.exercises.length ? { title: day.title, exercises: day.exercises } : null };
 }
@@ -53,6 +57,7 @@ function useContent(date, kind) {
 /** Title card above the list: what this session is, and the button that starts it. */
 function ListHeader({ date, kind, onStart }) {
   const { session, content } = useContent(date, kind);
+  const discardSession = useStore((s) => s.discardSession);
   if (!content) return null;
   const morning = kind === 'morning';
   const minutes = morning ? morningMinutes(content) : estimateWorkoutMinutes(content.exercises);
@@ -71,15 +76,29 @@ function ListHeader({ date, kind, onStart }) {
       <p className="text-[15px] opacity-85">
         ≈ {minutes} min · {size}
       </p>
-      {action && (
-        <button
-          onClick={() => onStart(!session)}
-          className="mt-2 flex h-14 items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
-          style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
-        >
-          <Play className="h-5 w-5" fill="currentColor" /> {action}
-        </button>
-      )}
+      <div className="mt-2 flex gap-2">
+        {action && (
+          <button
+            onClick={() => onStart(!session)}
+            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
+            style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+          >
+            <Play className="h-5 w-5" fill="currentColor" /> {action}
+          </button>
+        )}
+        {session && (
+          <button
+            onClick={() => {
+              if (confirm('Restart from scratch? Everything ticked in this session is cleared.')) {
+                discardSession(sessionKey(date, kind));
+              }
+            }}
+            className={`sky-glass flex h-14 items-center justify-center gap-2 rounded-[18px] px-5 text-[16px] ${action ? '' : 'flex-1'}`}
+          >
+            <RotateCcw className="h-4 w-4" /> Restart
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -92,6 +111,10 @@ function ListHeader({ date, kind, onStart }) {
 export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, onClose, onShowList, onFocus }) {
   const [shown, setShown] = useState(false);
   const [count, setCount] = useState(null); // 3, 2, 1 while counting down
+  const timerHere = useStore((s) => s.timer?.sessionKey === sessionKey(reveal.date, reveal.kind));
+  const afterCount = useRef(null);
+  // Pulling down from the top half minimizes the view (the session keeps going).
+  const pull = useSwipe({ onDown: onClose });
   useEffect(() => {
     const id = requestAnimationFrame(() => setShown(true));
     return () => cancelAnimationFrame(id);
@@ -120,20 +143,24 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
       } else {
         blip(true);
         setCount(null);
-        begin();
+        afterCount.current?.();
       }
     }, 1000);
     return () => clearTimeout(id);
-    // begin only reads the store and props that stay fixed while this view is open
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count]);
+
+  /** 3-2-1 with a soft blip on each number, then `then`. */
+  const countdown = (then) => {
+    afterCount.current = then;
+    blip();
+    setCount(3);
+  };
 
   const start = (fresh) => {
     // Sound has to start inside the tap.
     if (music && kind === 'morning') startAmbient();
     if (!fresh) return begin();
-    blip();
-    setCount(3);
+    countdown(begin);
   };
 
   return (
@@ -147,15 +174,30 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
       }}
     >
-      <div className="flex items-center gap-2 px-4 pt-2">
-        <GlassButton onClick={onClose} aria-label="Close">
-          <X className="h-4 w-4" /> Close
-        </GlassButton>
+      <div
+        className="mx-auto mt-0.5 h-1 w-10 shrink-0 rounded-full"
+        style={{ background: 'rgb(var(--ink-rgb) / 0.35)' }}
+        aria-hidden="true"
+      />
+      <div className="flex items-center gap-2 px-4 pt-1.5">
+        <button
+          onClick={onClose}
+          aria-label={isSession ? 'Minimize' : 'Close'}
+          className="flex h-11 w-11 items-center justify-center rounded-full"
+          style={{ border: '1px solid var(--glass-border)' }}
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
         <span className="flex-1" />
         {isSession && !reveal.list && (
-          <GlassButton onClick={onShowList} aria-label="Full list">
+          <button
+            onClick={onShowList}
+            aria-label="Full list"
+            className="flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[15px] font-medium"
+            style={{ background: 'var(--accent)', color: 'var(--on-accent)' }}
+          >
             <List className="h-4 w-4" /> List
-          </GlassButton>
+          </button>
         )}
         {hasMusic && (
           <GlassButton onClick={onToggleMusic} aria-pressed={music} aria-label={music ? 'Mute sound' : 'Play sound'}>
@@ -165,30 +207,43 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
         )}
       </div>
 
-      {count != null ? (
-        <div className="flex flex-1 items-center justify-center" aria-live="assertive">
+      {count != null && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center" aria-live="assertive">
           <span key={count} className="count-pop text-[180px] font-light leading-none tabular-nums">
             {count}
           </span>
         </div>
-      ) : isSession && reveal.list ? (
-        <>
-          <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-3">
-            <ListHeader date={date} kind={kind} onStart={start} />
-            <SessionScreen date={date} kind={kind} onBack={onClose} embedded />
-          </div>
-          <div className="px-2">
-            <TimerBar now={now} />
-          </div>
-        </>
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-3">
-          {kind === 'morning' && <StretchFocus date={date} now={now} />}
-          {kind === 'workout' && <WorkoutFocus date={date} now={now} />}
-          {kind === 'meditate' && <MeditatePreview />}
-          {kind === 'alarms' && <AlarmsPreview />}
-        </div>
       )}
+      {/* Content stays mounted under the countdown (meditation keeps its choices and sound). */}
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        style={{
+          opacity: count != null ? 0 : 1,
+          transition: 'opacity 200ms',
+          pointerEvents: count != null ? 'none' : undefined,
+        }}
+      >
+        {isSession && reveal.list ? (
+          <>
+            <div className="no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-3">
+              <ListHeader date={date} kind={kind} onStart={start} />
+              <SessionScreen date={date} kind={kind} onBack={onClose} embedded />
+            </div>
+            {timerHere && (
+              <div className="px-2">
+                <TimerBar now={now} />
+              </div>
+            )}
+          </>
+        ) : (
+          <div {...pull.handlers} className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-3">
+            {kind === 'morning' && <StretchFocus date={date} now={now} />}
+            {kind === 'workout' && <WorkoutFocus date={date} now={now} />}
+            {kind === 'meditate' && <Meditate sky={sky} now={now} countdown={countdown} />}
+            {kind === 'alarms' && <AlarmsPreview />}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

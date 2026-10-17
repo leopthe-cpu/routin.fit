@@ -5,6 +5,7 @@ import { SKIES, greetingFor, pickPhrase, PHRASES, slotFor } from './lib/sky';
 import { startAmbient, stopAmbient } from './lib/ambient';
 import Sky from './components/Sky';
 import TimerBar from './components/TimerBar';
+import SessionIsland from './components/SessionIsland';
 import TodayScreen from './screens/TodayScreen';
 import WeekScreen from './screens/WeekScreen';
 import PlansScreen from './screens/PlansScreen';
@@ -105,6 +106,11 @@ export default function App() {
   const music = useStore((s) => s.settings.music);
   const setSettings = useStore((s) => s.setSettings);
   const hasTimer = useStore((s) => !!s.timer);
+  // Kind of the session in progress, if any ('morning' | 'workout').
+  const activeKind = useStore((s) => {
+    const a = s.activeSessionKey && s.sessions[s.activeSessionKey];
+    return a && !a.endedAt ? a.kind : null;
+  });
 
   const [page, setPage] = useState(0);
   const pagerRef = useRef(null);
@@ -121,7 +127,10 @@ export default function App() {
   // Back button / swipe-back closes a revealed view instead of leaving the app.
   useEffect(() => {
     const onPop = () => {
-      stopAmbient();
+      // Minimizing a running stretch keeps its sound; anything else goes quiet.
+      const st = useStore.getState();
+      const a = st.activeSessionKey && st.sessions[st.activeSessionKey];
+      if (!(a && !a.endedAt && a.kind === 'morning')) stopAmbient();
       setReveal(null);
     };
     window.addEventListener('popstate', onPop);
@@ -130,16 +139,23 @@ export default function App() {
 
   const open = useCallback(
     (kind, opts = {}) => {
-      // Audio has to start inside a tap. Meditate plays straight away; stretches
-      // start their sound from the Start button.
-      if (music && kind === 'meditate') startAmbient();
       window.history.pushState({ reveal: kind }, '');
-      // Stretch and workout open on the day's list; Start counts down into focus.
-      const session = kind === 'morning' || kind === 'workout';
-      setReveal({ kind, date: opts.date ?? todayISO(), list: session, fromWeek: !!opts.fromWeek });
+      // Stretch and workout open on the day's list, where Start counts down into
+      // focus. A session already under way goes straight back to its focus view.
+      const date = opts.date ?? todayISO();
+      const s = useStore.getState().sessions[`${date}|${kind}`];
+      const running = !!s && !s.endedAt;
+      const isSession = kind === 'morning' || kind === 'workout';
+      setReveal({ kind, date, list: isSession && !running, fromWeek: !!opts.fromWeek });
     },
-    [music],
+    [],
   );
+
+  // A stretch that finishes while minimized stops its sound.
+  useEffect(() => {
+    if (reveal?.kind === 'meditate' || reveal?.kind === 'morning') return;
+    if (activeKind !== 'morning') stopAmbient();
+  }, [activeKind, reveal?.kind]);
   const close = () => window.history.back();
 
   const toggleMusic = () => {
@@ -216,11 +232,8 @@ export default function App() {
           </section>
         </div>
 
-        {!reveal && hasTimer && <TimerBar now={now} />}
-        <nav
-          className="flex justify-center gap-1 px-2"
-          style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))', background: 'var(--bg)' }}
-        >
+        {!reveal && hasTimer && !activeKind && <TimerBar now={now} />}
+        <nav className="flex justify-center gap-1 px-2" style={{ background: 'var(--bg)' }}>
           {PAGES.map((label, i) => (
             <button
               key={label}
@@ -235,6 +248,9 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))', background: 'var(--bg)' }}>
+          {!reveal && <SessionIsland now={now} onOpen={(kind, date) => open(kind, { date })} />}
+        </div>
       </div>
 
       {reveal && (
