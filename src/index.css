@@ -299,17 +299,35 @@ body {
 /* The sun breathes slowly while the app is open. */
 @keyframes sun-glow {
   from {
-    transform: scale(1);
-    opacity: 0.88;
+    transform: scale(0.94);
+    opacity: 0.8;
   }
   to {
-    transform: scale(1.07);
+    transform: scale(1.2);
     opacity: 1;
   }
 }
 .sun-glow {
   transform-origin: 50% 100%;
-  animation: sun-glow 6s ease-in-out infinite alternate;
+  animation: sun-glow 5s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+/* A soft white bloom over the sun that brightens and fades, out of step with the glow. */
+@keyframes sun-halo {
+  from {
+    transform: scale(0.9);
+    opacity: 0.15;
+  }
+  to {
+    transform: scale(1.25);
+    opacity: 0.75;
+  }
+}
+.sun-halo {
+  transform-origin: 50% 100%;
+  background: radial-gradient(55% 38% at 50% 100%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.35) 40%, rgba(255, 255, 255, 0) 75%);
+  mix-blend-mode: soft-light;
+  animation: sun-halo 3.6s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
 

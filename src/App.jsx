@@ -200,6 +200,8 @@ export default function App() {
 
   // Away from Today the sky folds into a slim band so lists get the room.
   const skyH = page === 0 ? 'var(--sky-h)' : 'var(--sky-band)';
+  // Skies with white text get a dark pill under the switcher; bright skies a light one.
+  const lightInk = sky.ink === '#FFFFFF' || sky.ink === '#F2F6FF';
   const greeting = `${greetingFor(slot)}${name ? `, ${name}` : ''}.`;
 
   return (
@@ -210,7 +212,7 @@ export default function App() {
       >
         <Sky sky={sky} />
         <div
-          className="absolute inset-x-6 bottom-0 flex items-center justify-center transition-opacity duration-300"
+          className="absolute inset-x-6 bottom-12 flex items-center justify-center transition-opacity duration-300"
           style={{
             top: 'env(safe-area-inset-top)',
             color: sky.ink,
@@ -225,6 +227,35 @@ export default function App() {
             </span>
           </p>
         </div>
+        {/* Page switcher on the sky's bottom edge, on a soft pill so it reads over the sun. */}
+        <nav
+          className="absolute inset-x-0 bottom-1.5 flex justify-center transition-opacity duration-300"
+          style={{ opacity: reveal ? 0 : 1, pointerEvents: reveal ? 'none' : undefined }}
+        >
+          <div
+            className="flex gap-0.5 rounded-full px-1.5"
+            style={{
+              color: sky.ink,
+              background: lightInk ? 'rgba(8, 12, 30, 0.28)' : 'rgba(255, 255, 255, 0.38)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
+          >
+            {PAGES.map((label, i) => (
+              <button
+                key={label}
+                onClick={() => goTo(i)}
+                aria-current={page === i ? 'page' : undefined}
+                className="label min-h-[40px] px-3 text-[10px]"
+                style={{ opacity: page === i ? 1 : 0.62 }}
+              >
+                <span className="pb-[3px]" style={{ borderBottom: `1px solid ${page === i ? sky.ink : 'transparent'}` }}>
+                  {label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </nav>
       </div>
 
       <div
@@ -232,21 +263,6 @@ export default function App() {
         style={{ top: skyH, transition: 'top 700ms cubic-bezier(0.2, 0.8, 0.2, 1)' }}
         aria-hidden={!!reveal}
       >
-        <nav className="flex shrink-0 justify-center gap-1 px-2 pt-1" style={{ background: 'var(--bg)' }}>
-          {PAGES.map((label, i) => (
-            <button
-              key={label}
-              onClick={() => goTo(i)}
-              aria-current={page === i ? 'page' : undefined}
-              className="label min-h-[44px] px-3 text-[10px]"
-              style={{ color: page === i ? 'var(--text-1)' : 'var(--text-3)' }}
-            >
-              <span className="pb-[3px]" style={{ borderBottom: `1px solid ${page === i ? 'var(--text-1)' : 'transparent'}` }}>
-                {label}
-              </span>
-            </button>
-          ))}
-        </nav>
         <div ref={pagerRef} onScroll={onPagerScroll} className="no-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
           <section aria-label="Today" className="today-fit h-full w-full shrink-0 snap-start overflow-hidden px-5">
             <TodayScreen now={now} sky={sky} onOpen={(kind) => open(kind)} />

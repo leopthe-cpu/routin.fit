@@ -5,8 +5,10 @@
 export default function Sky({ sky }) {
   return (
     <div aria-hidden="true" className="absolute inset-0" style={{ background: sky.base, transition: 'background 900ms ease' }}>
-      <div className="sun-glow absolute inset-0" style={{ background: sky.glow }} />
+      {/* Wider than the sky so the pulsing glow never shows an edge. */}
+      <div className="sun-glow absolute -inset-x-[20%] top-[-10%] bottom-0" style={{ background: sky.glow }} />
       <div className="absolute inset-0" style={{ background: sky.haze }} />
+      <div className="sun-halo absolute inset-0" />
       <svg className="absolute inset-0 h-full w-full" style={{ mixBlendMode: 'soft-light', opacity: 0.6 }}>
         <filter id="sky-grain">
           <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" />
