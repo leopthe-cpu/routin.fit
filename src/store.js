@@ -126,6 +126,10 @@ export const useStore = create(
       // A running meditation, so it survives minimizing:
       // { type, minutes, sound, startedAt, pausedAt, pausedTotal, doneAt }.
       meditation: null,
+      // One daily wake-up alarm: { time: 'HH:MM', on, lastRang: 'YYYY-MM-DD' | null }.
+      alarm: { time: '06:30', on: false, lastRang: null },
+      // True while the alarm is sounding (not saved).
+      alarmRinging: false,
       // Current working weight per exercise key: { value, unit, updatedAt }. Stays until changed.
       weights: {},
       // Imported past workouts: [{ date, key, name, sets: [{ value, unit }] }]
@@ -161,6 +165,10 @@ export const useStore = create(
         }),
       completeMeditation: () => set((s) => (s.meditation ? { meditation: { ...s.meditation, doneAt: Date.now() } } : {})),
       clearMeditation: () => set({ meditation: null }),
+
+      setAlarm: (patch) => set((s) => ({ alarm: { ...s.alarm, ...patch } })),
+      ringAlarm: (dateISO) => set((s) => ({ alarmRinging: true, alarm: { ...s.alarm, lastRang: dateISO } })),
+      stopAlarm: () => set({ alarmRinging: false }),
 
       addGoal: (title, days) =>
         set((s) => ({
@@ -436,6 +444,7 @@ export const useStore = create(
         goals: s.goals,
         goalChecks: s.goalChecks,
         meditation: s.meditation,
+        alarm: s.alarm,
       }),
     },
   ),

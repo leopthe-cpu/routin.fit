@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import { useNow } from '../hooks/useNow';
-import { AlarmClock, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun } from 'lucide-react';
+import { Bell, BellOff, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun, Target } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus } from '../store';
 import { dayKeyOf, toISODate, weekDates } from '../lib/dates';
 import { estimateWorkoutMinutes, shortTitle } from '../lib/estimate';
 import { morningMinutes } from '../lib/morning';
 import { useWeather } from '../hooks/useWeather';
+import { formatAlarm, nextAlarmDay } from '../lib/alarm';
 
 const WEATHER_ICONS = { sun: Sun, moon: Moon, cloudsun: CloudSun, cloud: Cloud, fog: CloudFog, rain: CloudRain, snow: CloudSnow, storm: CloudLightning };
 
@@ -147,36 +148,44 @@ function WeekBar({ plan, sessions, now, sky }) {
   );
 }
 
-function Goals({ date, dayKey }) {
-  const goals = useStore((s) => s.goals);
-  const checks = useStore((s) => s.goalChecks);
-  const toggleGoal = useStore((s) => s.toggleGoal);
-  const today = goals.filter((g) => g.days.includes(dayKey));
-  if (!today.length) return null;
+/** Under the weather: the next alarm, or a quiet "No alarm". Tap to set it. */
+function AlarmBell({ now, onOpen }) {
+  const alarm = useStore((s) => s.alarm);
+  const day = nextAlarmDay(alarm, now);
   return (
-    <div className="flex max-h-9 shrink-0 flex-wrap gap-1.5 overflow-hidden" aria-label="Goals today">
-      {today.map((g) => {
-        const on = !!checks[`${date}|${g.id}`];
-        return (
-          <button
-            key={g.id}
-            onClick={() => toggleGoal(date, g.id)}
-            aria-pressed={on}
-            className="tile flex h-9 max-w-full items-center gap-2 rounded-full pl-1.5 pr-3.5 text-left text-sm"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-          >
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-              style={{ background: on ? 'var(--accent)' : 'transparent', border: `1px solid ${on ? 'transparent' : 'var(--text-3)'}`, color: 'var(--on-accent)' }}
-            >
-              {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+    <button onClick={onOpen} className="flex min-h-[40px] items-center gap-2 text-right" aria-label={day ? `Alarm ${formatAlarm(alarm.time)} ${day}` : 'Set an alarm'}>
+      {day ? (
+        <>
+          <span className="flex flex-col items-end">
+            <span className="text-[15px] leading-tight tabular-nums" style={{ color: 'var(--text-1)' }}>
+              {formatAlarm(alarm.time)}
             </span>
-            <span className={`truncate ${on ? 'text-3 line-through' : ''}`}>{g.title}</span>
-          </button>
-        );
-      })}
-    </div>
+            <span className="label text-[9px] text-2">{day}</span>
+          </span>
+          <Bell className="h-5 w-5" strokeWidth={1.5} style={{ color: 'var(--text-1)' }} />
+        </>
+      ) : (
+        <>
+          <span className="label text-[9px] text-3">No alarm</span>
+          <BellOff className="h-5 w-5 text-3" strokeWidth={1.5} />
+        </>
+      )}
+    </button>
   );
+}
+
+/** The goals tile: today's goals and how many are ticked. */
+function goalsTile(goals, checks, iso, dayKey) {
+  if (!goals.length) return { value: 'Add a goal', sub: 'Runs, steps, habits…', status: 'New' };
+  const today = goals.filter((g) => g.days.includes(dayKey));
+  if (!today.length) return { value: 'None today', sub: `${goals.length} goal${goals.length > 1 ? 's' : ''} this week`, status: 'Open' };
+  const done = today.filter((g) => checks[`${iso}|${g.id}`]).length;
+  const next = today.find((g) => !checks[`${iso}|${g.id}`]);
+  return {
+    value: next ? next.title : 'All done',
+    sub: `${done} of ${today.length} today`,
+    status: done === today.length ? 'Done' : 'Open',
+  };
 }
 
 function TodayScreen({ sky, onOpen }) {
@@ -188,6 +197,10 @@ function TodayScreen({ sky, onOpen }) {
   const iso = toISODate(date);
   const dayKey = dayKeyOf(date);
   const day = plan?.days[dayKey];
+
+  const goals = useStore((s) => s.goals);
+  const goalChecks = useStore((s) => s.goalChecks);
+  const goal = goalsTile(goals, goalChecks, iso, dayKey);
 
   const tileState = (kind) => {
     const s = sessions[sessionKey(iso, kind)];
@@ -215,7 +228,11 @@ function TodayScreen({ sky, onOpen }) {
         </div>
         <Weather />
       </div>
-      <Clock now={now} />
+      {/* The alarm sits under the weather, beside the clock. */}
+      <div className="flex shrink-0 items-end justify-between gap-3">
+        <Clock now={now} />
+        <AlarmBell now={now} onOpen={() => onOpen('alarms')} />
+      </div>
 
       {day && (
         <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2.5" style={{ maxHeight: 360 }}>
@@ -241,9 +258,8 @@ function TodayScreen({ sky, onOpen }) {
             status={day.exercises.length ? tileState('workout') : 'Rest'}
             icon={day.exercises.length ? Dumbbell : Moon}
             tint={sky.dots[1]}
-            disabled={!day.exercises.length}
-            ariaLabel={`Start ${day.title} workout`}
-            onClick={() => onOpen('workout')}
+            ariaLabel={day.exercises.length ? `Start ${day.title} workout` : 'Rest day'}
+            onClick={() => onOpen(day.exercises.length ? 'workout' : 'rest')}
           />
           <Tile
             label="Meditate"
@@ -256,20 +272,16 @@ function TodayScreen({ sky, onOpen }) {
             onClick={() => onOpen('meditate')}
           />
           <Tile
-            label="Alarms"
-            value="Soon"
-            sub="Sunrise wake-up"
-            status="Soon"
-            icon={AlarmClock}
+            label="Goals"
+            {...goal}
+            icon={Target}
             tint={sky.dots[1]}
-            disabled
-            ariaLabel="Alarms, coming soon"
-            onClick={() => onOpen('alarms')}
+            ariaLabel="Goals"
+            onClick={() => onOpen('goals')}
           />
         </div>
       )}
 
-      <Goals date={iso} dayKey={dayKey} />
       {plan && <WeekBar plan={plan} sessions={sessions} now={now} sky={sky} />}
     </div>
   );

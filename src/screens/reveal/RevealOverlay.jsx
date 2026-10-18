@@ -11,7 +11,7 @@ import SessionScreen from '../SessionScreen';
 import TimerBar from '../../components/TimerBar';
 import StretchFocus from './StretchFocus';
 import WorkoutFocus from './WorkoutFocus';
-import { AlarmsPreview } from './Previews';
+import { AlarmEditor, GoalsView, RestDay } from './Previews';
 import Meditate from './Meditate';
 import { useSwipe } from '../../hooks/useSwipe';
 import { useNow } from '../../hooks/useNow';
@@ -147,7 +147,7 @@ function ListHeader({ date, kind, onStart }) {
  * day's list with a Start button; Start counts 3-2-1 into the focus view.
  * Meditate and alarms are previews for now.
  */
-export default function RevealOverlay({ reveal, sky, music, onToggleMusic, onClose, onShowList, onFocus }) {
+export default function RevealOverlay({ reveal, sky, music, onToggleMusic, onClose, onShowList, onFocus, onSwitch }) {
   // Timers on these screens count in quarter seconds; only this view redraws that often.
   const now = useNow(250);
   const [shown, setShown] = useState(false);
@@ -293,7 +293,9 @@ export default function RevealOverlay({ reveal, sky, music, onToggleMusic, onClo
             {kind === 'morning' && <StretchFocus date={date} now={now} />}
             {kind === 'workout' && <WorkoutFocus date={date} now={now} focusExId={reveal.focusExId} />}
             {kind === 'meditate' && <Meditate sky={sky} now={now} countdown={countdown} />}
-            {kind === 'alarms' && <AlarmsPreview />}
+            {kind === 'alarms' && <AlarmEditor />}
+            {kind === 'goals' && <GoalsView date={date} />}
+            {kind === 'rest' && <RestDay date={date} onSwitch={onSwitch} />}
           </div>
         )}
       </div>

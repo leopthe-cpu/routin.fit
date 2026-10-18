@@ -127,7 +127,11 @@ function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
         {day.morning && cardFor('morning')}
         {day.exercises.length > 0 && cardFor('workout')}
         {day.exercises.length === 0 && (
-          <div className="glass p-4">
+          <button
+            onClick={() => onOpenSession(selectedDate, 'rest')}
+            className="glass tile block w-full p-4 text-left"
+            aria-label="Open rest day"
+          >
             <div className="flex items-center gap-2">
               <Moon className="h-4 w-4" style={{ color: 'var(--accent)' }} />
               <h3 className="text-[15px] font-semibold">Rest & recover</h3>
@@ -141,7 +145,7 @@ function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
             ) : (
               <p className="mt-2 text-sm text-2">No workout planned. Let your body recover.</p>
             )}
-          </div>
+          </button>
         )}
         {day.exercises.length > 0 && day.notes.length > 0 && (
           <ul className="space-y-1 px-1 text-xs text-3">

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore, meditationActive, meditationProgress, sessionProgress } from './store';
 import { useNow } from './hooks/useNow';
 import { todayISO } from './lib/dates';
-import { SKIES, greetingFor, pickPhrase, PHRASES, slotFor } from './lib/sky';
+import { SKIES, glassFor, greetingFor, pickPhrase, PHRASES, slotFor } from './lib/sky';
+import { alarmDue } from './lib/alarm';
 import { blip, startAmbient, stopAmbient } from './lib/ambient';
 import Sky from './components/Sky';
 import TimerBar from './components/TimerBar';
@@ -46,6 +47,7 @@ function Watcher() {
   const timer = useStore((s) => s.timer);
   const expireTimer = useStore((s) => s.expireTimer);
   const meditation = useStore((s) => s.meditation);
+  const alarm = useStore((s) => s.alarm);
   const firedFor = useRef(null);
   const switchedFor = useRef(null);
 
@@ -74,7 +76,45 @@ function Watcher() {
     }
   }, [meditation, now]);
 
+  // The daily alarm (only while the app is open; locked-phone alarms need the native app).
+  useEffect(() => {
+    if (alarmDue(alarm, now)) useStore.getState().ringAlarm(todayISO());
+  }, [alarm, now]);
+
   return null;
+}
+
+/** The alarm going off: a full sunrise, the time, and a soft chime until "I'm up". */
+function AlarmRinging({ sky, name }) {
+  const stopAlarm = useStore((s) => s.stopAlarm);
+  const now = useNow(1000);
+  useEffect(() => {
+    const chime = () => {
+      blip();
+      setTimeout(() => blip(true), 220);
+      navigator.vibrate?.([300, 200, 300]);
+    };
+    chime();
+    const id = setInterval(chime, 3000);
+    return () => clearInterval(id);
+  }, []);
+  const time = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(now));
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 text-center" role="alertdialog" aria-label="Alarm" style={{ color: sky.ink }}>
+      <Sky sky={sky} />
+      <div className="relative flex flex-col items-center gap-3 px-6">
+        <span className="text-[84px] font-light leading-none tabular-nums">{time}</span>
+        <span className="text-[24px] font-light">Good morning{name ? `, ${name}` : ''}.</span>
+      </div>
+      <button
+        onClick={stopAlarm}
+        className="relative h-14 rounded-full px-10 text-lg font-semibold"
+        style={{ background: sky.ink, color: glassFor(sky).onInk }}
+      >
+        I&rsquo;m up
+      </button>
+    </div>
+  );
 }
 
 /** `?sky=late` previews a time of day; otherwise the sky follows the clock. */
@@ -166,6 +206,7 @@ export default function App() {
   const music = useStore((s) => s.settings.music);
   const setSettings = useStore((s) => s.setSettings);
   const hasTimer = useStore((s) => !!s.timer);
+  const alarmRinging = useStore((s) => s.alarmRinging);
   // Kind of the session in progress, if any ('morning' | 'workout').
   const activeKind = useStore((s) => {
     const a = s.activeSessionKey && s.sessions[s.activeSessionKey];
@@ -202,11 +243,14 @@ export default function App() {
       // One thing at a time: a different session (or meditation) still running asks first.
       const date0 = opts.date ?? todayISO();
       const busy = ongoing();
-      if (!opts.force && busy && (busy.kind !== kind || (busy.key && busy.key !== `${date0}|${kind}`))) {
+      const activity = kind === 'morning' || kind === 'workout' || kind === 'meditate';
+      if (activity && !opts.force && busy && (busy.kind !== kind || (busy.key && busy.key !== `${date0}|${kind}`))) {
         setConflict({ busy, want: { kind, opts } });
         return;
       }
-      window.history.pushState({ reveal: kind }, '');
+      // Switching from one view to another (e.g. rest day → stretch) replaces it, so Back still closes.
+      if (opts.replace) window.history.replaceState({ reveal: kind }, '');
+      else window.history.pushState({ reveal: kind }, '');
       // Stretch and workout open on the day's list, where Start counts down into
       // focus. A session already under way goes straight back to its focus view.
       const date = opts.date ?? todayISO();
@@ -286,6 +330,7 @@ export default function App() {
   return (
     <div className={`app-h relative mx-auto max-w-md overflow-hidden ${reveal ? 'sky-still' : ''}`}>
       <Watcher />
+      {alarmRinging && <AlarmRinging sky={sky} name={name} />}
       <div
         className="absolute inset-x-0 top-0 z-20 overflow-hidden"
         style={{ height: reveal ? '100%' : skyH, transition: 'height 700ms cubic-bezier(0.2, 0.8, 0.2, 1)' }}
@@ -399,6 +444,7 @@ export default function App() {
           onClose={close}
           onShowList={() => setReveal((r) => ({ ...r, list: true }))}
           onFocus={(extra = {}) => setReveal((r) => ({ ...r, list: false, ...extra }))}
+          onSwitch={(kind) => open(kind, { date: reveal.date, replace: true })}
         />
       )}
     </div>
