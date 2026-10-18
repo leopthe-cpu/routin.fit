@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { workoutLog, seriesByExercise, planStats } from '../lib/progress';
 import { exerciseKey } from '../lib/weights';
@@ -46,7 +46,7 @@ function ExerciseProgress({ series, unit }) {
   );
 }
 
-export default function ProgressScreen() {
+function ProgressScreen() {
   const history = useStore((s) => s.history);
   const sessions = useStore((s) => s.sessions);
   const unit = useStore((s) => s.settings.unit);
@@ -115,3 +115,6 @@ export default function ProgressScreen() {
     </div>
   );
 }
+
+// Memoized: the app shell redraws on page and sky changes; this page only needs its own data.
+export default memo(ProgressScreen);

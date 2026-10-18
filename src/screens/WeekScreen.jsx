@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ChevronLeft, ChevronRight, Dumbbell, Moon, Sun } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus as statusOf } from '../store';
 import { weekDates, todayISO, planWeek, fromISODate } from '../lib/dates';
@@ -14,7 +15,7 @@ const LONG_DAY = {
   Sun: 'Sunday',
 };
 
-export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
+function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
   const plan = useStore((s) => s.activePlan());
   const sessions = useStore((s) => s.sessions);
   const today = todayISO();
@@ -153,3 +154,6 @@ export default function WeekScreen({ selectedDate, onSelectDate, onOpenSession }
     </div>
   );
 }
+
+// Memoized: the app shell redraws on page and sky changes; this page only needs its own data.
+export default memo(WeekScreen);

@@ -38,7 +38,7 @@ function BigWeight({ ex }) {
   }
   const step = unit === 'kg' ? 1 : 2.5;
   const nudge = (d) => setWeight(wkey, Math.max(0, roundTo((shown ?? 0) + d, STEP[unit])), unit);
-  const round = 'sky-glass flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full';
+  const round = 'sky-btn flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full';
   return (
     <div className="flex items-center justify-between">
       <button onClick={() => nudge(-step)} aria-label="Lighter" className={round}>
@@ -146,7 +146,7 @@ function SetCard({ step, exercises, done, face, setFace, nextLabel, onNext, onUn
               {done ? (
                 <button
                   onClick={onUndo}
-                  className="sky-glass flex h-[60px] items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
+                  className="sky-btn flex h-[60px] items-center justify-center gap-2 rounded-[18px] text-lg font-semibold"
                 >
                   <RotateCcw className="h-5 w-5" /> Undo this set
                 </button>

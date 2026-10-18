@@ -1,9 +1,12 @@
 import { Minus, Pause, Play, Plus, SkipForward } from 'lucide-react';
 import { useStore, timerLeft } from '../store';
+import { useNow } from '../hooks/useNow';
 
 const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-export default function TimerBar({ now }) {
+export default function TimerBar({ now: nowProp }) {
+  const ownNow = useNow(250);
+  const now = nowProp ?? ownNow;
   const timer = useStore((s) => s.timer);
   const { adjustTimer, clearTimer, expireTimer, pauseTimer, resumeTimer } = useStore();
   if (!timer) return null;

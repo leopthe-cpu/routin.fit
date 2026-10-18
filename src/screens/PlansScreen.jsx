@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Check, Loader2, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useStore, makePlan } from '../store';
 import { parsePlanText, looksUnparsed, DAY_KEYS } from '../lib/parsePlan';
@@ -102,7 +102,7 @@ function PlanEditor({ initial, onCancel, onSave }) {
   );
 }
 
-export default function PlansScreen() {
+function PlansScreen() {
   const { plans, activePlanId, settings, addPlan, updatePlan, deletePlan, setActivePlan, setSettings } = useStore();
   const [editing, setEditing] = useState(null); // null | 'new' | plan id
 
@@ -206,3 +206,6 @@ export default function PlansScreen() {
     </div>
   );
 }
+
+// Memoized: the app shell redraws on page and sky changes; this page only needs its own data.
+export default memo(PlansScreen);

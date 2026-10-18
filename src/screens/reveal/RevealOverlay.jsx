@@ -14,6 +14,7 @@ import WorkoutFocus from './WorkoutFocus';
 import { AlarmsPreview } from './Previews';
 import Meditate from './Meditate';
 import { useSwipe } from '../../hooks/useSwipe';
+import { useNow } from '../../hooks/useNow';
 import { Chip, FlipCard, GlassButton } from './parts';
 
 /** Theme variables so everything inside reads well on the current sky, including the reused list view. */
@@ -32,7 +33,7 @@ function skyVars(sky) {
     '--glass-border': g.border,
     '--glass-btn': g.btn,
     '--glass-solid': g.solid,
-    '--card-bg': g.bg,
+    '--card-bg': g.card,
     '--card-border': g.border,
     '--card-shadow': 'none',
     '--accent': sky.ink,
@@ -128,7 +129,7 @@ function ListHeader({ date, kind, onStart }) {
                       discardSession(sessionKey(date, kind));
                     }
                   }}
-                  className={`sky-glass flex h-[52px] items-center justify-center gap-2 rounded-[18px] px-5 text-[16px] ${action ? '' : 'flex-1'}`}
+                  className={`sky-btn flex h-[52px] items-center justify-center gap-2 rounded-[18px] px-5 text-[16px] ${action ? '' : 'flex-1'}`}
                 >
                   <RotateCcw className="h-4 w-4" /> Restart
                 </button>
@@ -146,7 +147,9 @@ function ListHeader({ date, kind, onStart }) {
  * day's list with a Start button; Start counts 3-2-1 into the focus view.
  * Meditate and alarms are previews for now.
  */
-export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, onClose, onShowList, onFocus }) {
+export default function RevealOverlay({ reveal, sky, music, onToggleMusic, onClose, onShowList, onFocus }) {
+  // Timers on these screens count in quarter seconds; only this view redraws that often.
+  const now = useNow(250);
   const [shown, setShown] = useState(false);
   const [count, setCount] = useState(null); // 3, 2, 1 while counting down
   const timerHere = useStore((s) => s.timer?.sessionKey === sessionKey(reveal.date, reveal.kind));
@@ -211,8 +214,9 @@ export default function RevealOverlay({ reveal, sky, now, music, onToggleMusic, 
         ...skyVars(sky),
         opacity: shown ? 1 : 0,
         transitionDelay: shown ? '250ms' : '0ms',
-        paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+        // Clear of the status bar and Dynamic Island, with a little air so nothing sits where taps don't land.
+        paddingTop: 'calc(var(--sat) + 6px)',
+        paddingBottom: 'var(--sab-gap)',
       }}
     >
       {/* Grab handle and top bar: drag down here to minimize. */}

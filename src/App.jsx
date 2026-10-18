@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore, meditationActive, meditationProgress, sessionProgress } from './store';
+import { useNow } from './hooks/useNow';
 import { todayISO } from './lib/dates';
 import { SKIES, greetingFor, pickPhrase, PHRASES, slotFor } from './lib/sky';
 import { blip, startAmbient, stopAmbient } from './lib/ambient';
@@ -36,25 +37,17 @@ function alertTimerDone() {
 
 /**
  * Timers store an absolute end time, so they keep counting while the user is on
- * another screen or the tab is in the background; this tick only redraws and
- * fires the end-of-timer action. A paused timer never fires.
+ * another screen or the app is in the background. This watcher ticks on its
+ * own (it draws nothing, so the fast tick costs no redraws) and fires the
+ * end-of-timer action and a meditation's end. A paused timer never fires.
  */
-function useTicker() {
-  const [now, setNow] = useState(Date.now());
+function Watcher() {
+  const now = useNow(250);
   const timer = useStore((s) => s.timer);
   const expireTimer = useStore((s) => s.expireTimer);
+  const meditation = useStore((s) => s.meditation);
   const firedFor = useRef(null);
   const switchedFor = useRef(null);
-
-  useEffect(() => {
-    const tick = () => setNow(Date.now());
-    const id = setInterval(tick, 250);
-    document.addEventListener('visibilitychange', tick);
-    return () => {
-      clearInterval(id);
-      document.removeEventListener('visibilitychange', tick);
-    };
-  }, []);
 
   useEffect(() => {
     if (!timer || timer.pausedAt) return;
@@ -71,7 +64,17 @@ function useTicker() {
     }
   }, [now, timer, expireTimer]);
 
-  return now;
+  // A meditation ends on time even when it's minimized.
+  useEffect(() => {
+    if (!meditationActive(meditation) || meditation.pausedAt) return;
+    if (meditationProgress(meditation, now).left <= 0) {
+      useStore.getState().completeMeditation();
+      blip(true);
+      stopAmbient();
+    }
+  }, [meditation, now]);
+
+  return null;
 }
 
 /** `?sky=late` previews a time of day; otherwise the sky follows the clock. */
@@ -128,7 +131,7 @@ function OneThingDialog({ busy, want, onCancel, onGoBack, onSwitch }) {
     <div className="absolute inset-0 z-40 flex items-end justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="one-thing">
       <button className="absolute inset-0 bg-black/40" aria-label="Cancel" onClick={onCancel} />
       <div
-        className="relative mb-[env(safe-area-inset-bottom)] w-full max-w-sm rounded-3xl p-5"
+        className="relative mb-[var(--sab-gap)] w-full max-w-sm rounded-3xl p-5"
         style={{ background: 'var(--bg)', color: 'var(--text-1)', boxShadow: '0 20px 50px -10px rgba(0,0,0,0.5)' }}
       >
         <p id="one-thing" className="text-[22px] font-medium leading-tight">
@@ -154,7 +157,8 @@ function OneThingDialog({ busy, want, onCancel, onGoBack, onSwitch }) {
 }
 
 export default function App() {
-  const now = useTicker();
+  // The app shell only needs the time for the sky, so it checks twice a minute.
+  const now = useNow(30_000);
   const slot = useSlot(now);
   const sky = SKIES[slot];
   const phrase = usePhrase();
@@ -215,6 +219,10 @@ export default function App() {
   );
 
   const [conflict, setConflict] = useState(null); // { busy, want }
+  // Stable handlers, so the memoized pages don't redraw when the shell does.
+  const openTile = useCallback((kind) => open(kind), [open]);
+  const openIsland = useCallback((kind, date) => open(kind, { date }), [open]);
+  const openFromWeek = useCallback((date, kind) => open(kind, { date, fromWeek: true }), [open]);
 
   // A stretch or meditation that finishes while minimized stops its sound.
   const medActive = useStore((s) => meditationActive(s.meditation));
@@ -222,17 +230,6 @@ export default function App() {
     if (reveal?.kind === 'meditate' || reveal?.kind === 'morning') return;
     if (!soundKeepsGoing()) stopAmbient();
   }, [activeKind, medActive, reveal?.kind]);
-
-  // A meditation ends on time even when it's minimized.
-  const meditation = useStore((s) => s.meditation);
-  useEffect(() => {
-    if (!meditationActive(meditation) || meditation.pausedAt) return;
-    if (meditationProgress(meditation, now).left <= 0) {
-      useStore.getState().completeMeditation();
-      blip(true);
-      stopAmbient();
-    }
-  }, [meditation, now]);
 
   /** Stop whatever is running so something else can start. */
   const endOngoing = (busy) => {
@@ -287,7 +284,8 @@ export default function App() {
   const greeting = `${greetingFor(slot)}${name ? `, ${name}` : ''}.`;
 
   return (
-    <div className="app-h relative mx-auto max-w-md overflow-hidden">
+    <div className={`app-h relative mx-auto max-w-md overflow-hidden ${reveal ? 'sky-still' : ''}`}>
+      <Watcher />
       <div
         className="absolute inset-x-0 top-0 z-20 overflow-hidden"
         style={{ height: reveal ? '100%' : skyH, transition: 'height 700ms cubic-bezier(0.2, 0.8, 0.2, 1)' }}
@@ -296,7 +294,7 @@ export default function App() {
         <div
           className="absolute inset-x-6 bottom-12 flex items-center justify-center transition-opacity duration-300"
           style={{
-            top: 'env(safe-area-inset-top)',
+            top: 'var(--sat)',
             color: sky.ink,
             opacity: reveal || page !== 0 ? 0 : 1,
           }}
@@ -347,13 +345,13 @@ export default function App() {
       >
         <div ref={pagerRef} onScroll={onPagerScroll} className="no-scrollbar flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden">
           <section aria-label="Today" className="today-fit h-full w-full shrink-0 snap-start overflow-hidden px-5">
-            <TodayScreen now={now} sky={sky} onOpen={(kind) => open(kind)} />
+            <TodayScreen sky={sky} onOpen={openTile} />
           </section>
           <section aria-label="Plans" className="no-scrollbar h-full w-full shrink-0 snap-start space-y-6 overflow-y-auto px-5 pb-6 pt-5">
             <WeekScreen
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
-              onOpenSession={(date, kind) => open(kind, { date, fromWeek: true })}
+              onOpenSession={openFromWeek}
             />
             <GoalsSection />
             <PlansScreen />
@@ -366,9 +364,9 @@ export default function App() {
           </section>
         </div>
 
-        {!reveal && hasTimer && !activeKind && <TimerBar now={now} />}
-        <div style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))', background: 'var(--bg)' }}>
-          {!reveal && <SessionIsland now={now} onOpen={(kind, date) => open(kind, { date })} />}
+        {!reveal && hasTimer && !activeKind && <TimerBar />}
+        <div style={{ paddingBottom: 'var(--sab-gap)', background: 'var(--bg)' }}>
+          {!reveal && <SessionIsland onOpen={openIsland} />}
         </div>
       </div>
 
@@ -396,7 +394,6 @@ export default function App() {
           key={`${reveal.kind}|${reveal.date}`}
           reveal={reveal}
           sky={sky}
-          now={now}
           music={music}
           onToggleMusic={toggleMusic}
           onClose={close}

@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useStore } from '../store';
 import { DAY_KEYS } from '../lib/parsePlan';
 
 /** Simple recurring goals ("Run 5 km" on Mon, Wed, Fri) that show up on Today. */
-export default function GoalsSection() {
+function GoalsSection() {
   const goals = useStore((s) => s.goals);
   const addGoal = useStore((s) => s.addGoal);
   const deleteGoal = useStore((s) => s.deleteGoal);
@@ -84,3 +84,6 @@ export default function GoalsSection() {
     </section>
   );
 }
+
+// Memoized: the app shell redraws on page and sky changes; this page only needs its own data.
+export default memo(GoalsSection);

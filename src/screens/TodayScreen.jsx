@@ -1,3 +1,5 @@
+import { memo } from 'react';
+import { useNow } from '../hooks/useNow';
 import { AlarmClock, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus } from '../store';
 import { dayKeyOf, toISODate, weekDates } from '../lib/dates';
@@ -177,7 +179,9 @@ function Goals({ date, dayKey }) {
   );
 }
 
-export default function TodayScreen({ now, sky, onOpen }) {
+function TodayScreen({ sky, onOpen }) {
+  // The clock shows minutes, so a 10-second refresh is plenty.
+  const now = useNow(10_000);
   const plan = useStore((s) => s.activePlan());
   const sessions = useStore((s) => s.sessions);
   const date = new Date(now);
@@ -214,7 +218,7 @@ export default function TodayScreen({ now, sky, onOpen }) {
       <Clock now={now} />
 
       {day && (
-        <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2.5" style={{ maxHeight: 280 }}>
+        <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2.5" style={{ maxHeight: 360 }}>
           <Tile
             label="Stretch"
             value={day.morning ? 'Morning flow' : 'Not planned'}
@@ -270,3 +274,5 @@ export default function TodayScreen({ now, sky, onOpen }) {
     </div>
   );
 }
+
+export default memo(TodayScreen);

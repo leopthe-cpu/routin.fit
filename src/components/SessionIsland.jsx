@@ -1,6 +1,7 @@
 import { ChevronUp, Dumbbell, Flower2, Sun } from 'lucide-react';
 import { useStore, sessionProgress, timerLeft, meditationActive, meditationProgress } from '../store';
 import { clock } from '../lib/clock';
+import { useNow } from '../hooks/useNow';
 
 function Island({ icon: Icon, title, status, time, fraction, label, onClick }) {
   return (
@@ -53,7 +54,8 @@ function Island({ icon: Icon, title, status, time, fraction, label, onClick }) {
  * workout or stretch (rest or move timer, else time so far, plus progress) or
  * a meditation (time left). Tap to go back in.
  */
-export default function SessionIsland({ now, onOpen }) {
+export default function SessionIsland({ onOpen }) {
+  const now = useNow(500);
   const active = useStore((s) => (s.activeSessionKey ? s.sessions[s.activeSessionKey] : null));
   const timer = useStore((s) => s.timer);
   const meditation = useStore((s) => s.meditation);

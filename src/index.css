@@ -115,8 +115,13 @@ body {
   .sky-glass {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(22px) saturate(1.3);
-    -webkit-backdrop-filter: blur(22px) saturate(1.3);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  /* Buttons on the sky: the same look without a blur of their own. */
+  .sky-btn {
+    background: var(--glass-btn);
+    border: 1px solid var(--glass-border);
   }
   .tile {
     transition: transform 140ms ease, box-shadow 140ms ease;
@@ -142,17 +147,32 @@ body {
   }
 }
 
-/* Cards reused inside the full-screen sky get the frosted look. */
-.reveal .glass,
+/*
+ * Cards reused inside the full-screen sky: a denser tint instead of a per-card
+ * blur (a list of blurred cards is the most expensive thing a phone can draw
+ * while scrolling). Only the timer sheet keeps its blur.
+ */
 .reveal .sheet {
-  backdrop-filter: blur(18px) saturate(1.3);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* The app fills the screen; the sky takes about the top third. */
+/*
+ * iPhone safe areas in one place. --sat clears the status bar / Dynamic
+ * Island; --sab-gap keeps content just clear of the home indicator without
+ * leaving the full 34 px empty (the indicator sits over the bottom edge, so
+ * the last ~14 px can hold background).
+ */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sab-gap: max(10px, calc(var(--sab) - 14px));
+}
+
 :root {
   --sky-h: clamp(160px, 32vh, 320px);
-  --sky-band: calc(env(safe-area-inset-top) + 56px);
+  --sky-band: calc(var(--sat) + 56px);
   --vh: 1vh;
 }
 @supports (height: 1dvh) {
@@ -318,17 +338,21 @@ body {
 @keyframes sun-halo {
   from {
     transform: scale(0.9);
-    opacity: 0.15;
+    opacity: 0.1;
   }
   to {
     transform: scale(1.25);
-    opacity: 0.75;
+    opacity: 0.7;
   }
+}
+/* While a session covers the screen, the sky behind it holds still (saves battery and keeps scrolling smooth). */
+.sky-still .sun-glow,
+.sky-still .sun-halo {
+  animation-play-state: paused;
 }
 .sun-halo {
   transform-origin: 50% 100%;
-  background: radial-gradient(55% 38% at 50% 100%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.35) 40%, rgba(255, 255, 255, 0) 75%);
-  mix-blend-mode: soft-light;
+  background: radial-gradient(55% 38% at 50% 100%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0) 75%);
   animation: sun-halo 3.6s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
@@ -384,6 +408,6 @@ select {
 /* The pinned title card in a session list: frosted enough that cards scrolling under it don't show through. */
 .reveal .list-head {
   background: var(--glass-solid);
-  backdrop-filter: blur(28px) saturate(1.4);
-  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }

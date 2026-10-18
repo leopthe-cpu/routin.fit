@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Download, Lock, Upload } from 'lucide-react';
 import { clearWeatherCache } from '../lib/weather';
 import { useStore } from '../store';
@@ -64,7 +64,7 @@ function Segmented({ label, value, options, onChange }) {
   );
 }
 
-export default function SettingsScreen() {
+function SettingsScreen() {
   const settings = useStore((s) => s.settings);
   const setSettings = useStore((s) => s.setSettings);
   const importData = useStore((s) => s.importData);
@@ -223,3 +223,6 @@ export default function SettingsScreen() {
     </div>
   );
 }
+
+// Memoized: the app shell redraws on page and sky changes; this page only needs its own data.
+export default memo(SettingsScreen);

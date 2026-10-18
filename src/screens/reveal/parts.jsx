@@ -9,7 +9,7 @@ export function GlassButton({ children, className = '', ...props }) {
   return (
     <button
       {...props}
-      className={`sky-glass flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[15px] disabled:opacity-40 ${className}`}
+      className={`sky-btn flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[15px] disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
