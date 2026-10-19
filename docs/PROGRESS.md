@@ -20,6 +20,9 @@ summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oc
   Source: commit "Rename to goodays and add the iPhone app"
 - [ ] Check the rain sound keeps playing with the phone locked @claude #ios
   Background audio mode and audio session are set; Web Audio inside the app may still pause. If so, play it natively.
+- [ ] Read fitness tracker data through Apple Health @claude #ios #health
+  Apple Watch, and Fitbit via the Google Health app's Apple Health sync, land in Apple Health; the iPhone app can read steps, sleep, heart rate and workouts from there with permission, and write its own workouts and mindful minutes back. Planned after the first Xcode build. HealthKit is offered to free Apple accounts (Apple's capability table).
+  Source: chat 2026-10-19
 - [ ] Interactive widget: tick a goal from the home screen @claude #ios
 - [ ] Look into AlarmKit for a real alarm (iOS 26) @claude #ios
   The alarm is a notification for now. AlarmKit availability and rules need checking.
