@@ -1,5 +1,6 @@
 import { ChevronUp, Dumbbell, Flower2, Sun } from 'lucide-react';
-import { useStore, sessionProgress, timerLeft, meditationActive, meditationProgress } from '../store';
+import { useStore } from '../store';
+import { liveSummary } from '../lib/live';
 import { clock } from '../lib/clock';
 import { useNow } from '../hooks/useNow';
 
@@ -59,38 +60,19 @@ export default function SessionIsland({ onOpen }) {
   const active = useStore((s) => (s.activeSessionKey ? s.sessions[s.activeSessionKey] : null));
   const timer = useStore((s) => s.timer);
   const meditation = useStore((s) => s.meditation);
-
-  if (active && !active.endedAt) {
-    const { done, total } = sessionProgress(active);
-    const timed = timer?.sessionKey === active.key;
-    const morning = active.kind === 'morning';
-    const title = morning ? 'Stretches' : active.snapshot.title;
-    const status = timed ? (timer.complete ? timer.label : 'Rest') : `${done} of ${total} ${morning ? 'moves' : 'sets'}`;
-    return (
-      <Island
-        icon={morning ? Sun : Dumbbell}
-        title={title}
-        status={`${status}${timed && timer.pausedAt ? ' · paused' : ''}`}
-        time={timed ? timerLeft(timer, now) : Math.floor((now - new Date(active.startedAt).getTime()) / 1000)}
-        fraction={total ? done / total : 0}
-        label={`Back to ${title}`}
-        onClick={() => onOpen(active.kind, active.date)}
-      />
-    );
-  }
-  if (meditationActive(meditation)) {
-    const { length, elapsed, left } = meditationProgress(meditation, now);
-    return (
-      <Island
-        icon={Flower2}
-        title={`Meditation · ${meditation.type}`}
-        status={meditation.pausedAt ? 'Paused' : `${meditation.minutes} min`}
-        time={Math.ceil(left)}
-        fraction={length ? elapsed / length : 0}
-        label="Back to meditation"
-        onClick={() => onOpen('meditate')}
-      />
-    );
-  }
-  return null;
+  const live = liveSummary({ active, timer, meditation }, now);
+  if (!live) return null;
+  const meditate = live.kind === 'meditate';
+  const back = meditate ? 'meditation' : live.title;
+  return (
+    <Island
+      icon={meditate ? Flower2 : live.kind === 'morning' ? Sun : Dumbbell}
+      title={live.title}
+      status={live.status}
+      time={live.seconds}
+      fraction={live.fraction}
+      label={`Back to ${back}`}
+      onClick={() => (meditate ? onOpen('meditate') : onOpen(live.kind, live.date))}
+    />
+  );
 }

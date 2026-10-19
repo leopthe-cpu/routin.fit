@@ -23,6 +23,7 @@ import { displayWeight, formatWeight, roundTo, STEP } from '../../lib/units';
 import { formLinks } from '../../lib/youtube';
 import { clock } from '../../lib/clock';
 import { useSwipe } from '../../hooks/useSwipe';
+import { success, tap } from '../../native';
 import { Bar, Chip, FlipCard, FocusHeader, GlassButton, GlassCard, SwipeHint } from './parts';
 
 function BigWeight({ ex }) {
@@ -309,6 +310,8 @@ export default function WorkoutFocus({ date, now, focusExId }) {
     const finishesExercise = (session?.done[st.ex.id]?.length ?? 0) + 1 >= st.ex.sets;
     const last = !after(st);
     toggleSet(key, st.ex.id, st.setIndex);
+    if (last) success();
+    else tap(finishesExercise);
     setLastDone(seq.indexOf(st));
     setDir('next');
     setFace('front');

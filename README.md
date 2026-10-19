@@ -1,6 +1,6 @@
-# routin.fit
+# goodays
 
-A personal workout companion: a weekly plan shown day by day, with separate
+A calm daily companion (formerly routin.fit): a weekly plan shown day by day, with separate
 **Morning stretches** and **Today's workout** sessions, set-by-set tracking,
 automatic rest timers and progress that survives navigation and reloads.
 
@@ -78,7 +78,7 @@ for this site. Fonts are self-hosted, so no third-party font requests.
 
 `src/data/library.json` holds 755 exercises (strength, powerlifting and
 stretching) built from [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
-(public domain, Unlicense) plus a few routin.fit additions. Each entry is tagged
+(public domain, Unlicense) plus a few goodays additions. Each entry is tagged
 with movement pattern, muscles (deltoids split into front/side/rear), equipment
 needed, machine / free weight / bodyweight, joints loaded and stretch emphasis.
 
@@ -91,3 +91,9 @@ tagging rules), `additions.json`, `aliases.json` and `overrides.json` for hand
 fixes. The tags are heuristics; `docs/library-report.md` lists what each rule
 produced for review. `src/lib/library.js` matches plan text to library entries
 and finds swaps that fit the user's gym, equipment and injuries.
+
+## iPhone app
+
+The same app wrapped with Capacitor, plus haptics, notifications, a Live
+Activity (Lock Screen and Dynamic Island) and home-screen widgets. Setup and
+first build: [docs/ios-app.md](docs/ios-app.md).

@@ -2,7 +2,8 @@ import { memo } from 'react';
 import { useNow } from '../hooks/useNow';
 import { Bell, BellOff, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun, Target } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus } from '../store';
-import { dayKeyOf, toISODate, weekDates } from '../lib/dates';
+import { goalsTile, weekProgress } from '../lib/today';
+import { dayKeyOf, toISODate } from '../lib/dates';
 import { estimateWorkoutMinutes, shortTitle } from '../lib/estimate';
 import { morningMinutes } from '../lib/morning';
 import { useWeather } from '../hooks/useWeather';
@@ -98,29 +99,6 @@ function Tile({ label, value, sub, status, icon: Icon, tint, onClick, ariaLabel,
   );
 }
 
-/** Share of this week's planned stretches and workouts that were done (ended with at least one tick). */
-function weekProgress(plan, sessions, now) {
-  let planned = 0;
-  let workouts = 0;
-  let stretches = 0;
-  for (const w of weekDates(new Date(now))) {
-    const day = plan.days[w.key];
-    const counted = (kind) => {
-      const s = sessions[sessionKey(w.iso, kind)];
-      return !!s?.endedAt && sessionProgress(s).done > 0;
-    };
-    if (day.morning) {
-      planned++;
-      if (counted('morning')) stretches++;
-    }
-    if (day.exercises.length) {
-      planned++;
-      if (counted('workout')) workouts++;
-    }
-  }
-  return { planned, workouts, stretches, pct: planned ? Math.round(((workouts + stretches) / planned) * 100) : 0 };
-}
-
 function WeekBar({ plan, sessions, now, sky }) {
   const { planned, workouts, stretches, pct } = weekProgress(plan, sessions, now);
   return (
@@ -172,20 +150,6 @@ function AlarmBell({ now, onOpen }) {
       )}
     </button>
   );
-}
-
-/** The goals tile: today's goals and how many are ticked. */
-function goalsTile(goals, checks, iso, dayKey) {
-  if (!goals.length) return { value: 'Add a goal', sub: 'Runs, steps, habits…', status: 'New' };
-  const today = goals.filter((g) => g.days.includes(dayKey));
-  if (!today.length) return { value: 'None today', sub: `${goals.length} goal${goals.length > 1 ? 's' : ''} this week`, status: 'Open' };
-  const done = today.filter((g) => checks[`${iso}|${g.id}`]).length;
-  const next = today.find((g) => !checks[`${iso}|${g.id}`]);
-  return {
-    value: next ? next.title : 'All done',
-    sub: `${done} of ${today.length} today`,
-    status: done === today.length ? 'Done' : 'Open',
-  };
 }
 
 function TodayScreen({ sky, onOpen }) {

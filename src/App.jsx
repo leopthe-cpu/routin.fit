@@ -15,11 +15,14 @@ import GoalsSection from './screens/GoalsSection';
 import ProgressScreen from './screens/ProgressScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import RevealOverlay from './screens/reveal/RevealOverlay';
+import NativeSync from './native/NativeSync';
+import { success, tap } from './native';
 
 const PAGES = ['Today', 'Plans', 'Progress', 'Settings'];
 
 /** Short beep + vibration when a timer runs out. Both are best effort. */
 function alertTimerDone() {
+  tap(true);
   try {
     navigator.vibrate?.([200, 100, 200]);
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -71,6 +74,7 @@ function Watcher() {
     if (!meditationActive(meditation) || meditation.pausedAt) return;
     if (meditationProgress(meditation, now).left <= 0) {
       useStore.getState().completeMeditation();
+      success();
       blip(true);
       stopAmbient();
     }
@@ -330,6 +334,7 @@ export default function App() {
   return (
     <div className={`app-h relative mx-auto max-w-md overflow-hidden ${reveal ? 'sky-still' : ''}`}>
       <Watcher />
+      <NativeSync />
       {alarmRinging && <AlarmRinging sky={sky} name={name} />}
       <div
         className="absolute inset-x-0 top-0 z-20 overflow-hidden"

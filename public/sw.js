@@ -1,7 +1,7 @@
 // Offline support. Pages: network first, falling back to the cached copy so the
 // app opens with no signal at the gym. Built assets have hashed names, so they
 // are cached on first use and served from cache after that.
-const CACHE = 'routin-fit-v2';
+const CACHE = 'goodays-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
 

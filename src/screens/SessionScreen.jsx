@@ -6,6 +6,7 @@ import { fromISODate } from '../lib/dates';
 import { formLinks } from '../lib/youtube';
 import { findStretch } from '../data/stretches';
 import WeightControl from '../components/WeightControl';
+import { tap } from '../native';
 
 /** A "Form" chip; tapping it shows links to form videos underneath. */
 function FormChip({ name }) {
@@ -204,6 +205,7 @@ export default function SessionScreen({ date, kind, onBack, embedded = false, on
   };
   const onToggle = (itemId, i) => {
     ensureStarted();
+    tap();
     toggleSet(key, itemId, i);
   };
   const onPlayMove = (index) => {

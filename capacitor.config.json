@@ -1,0 +1,14 @@
+{
+  "appId": "world.goodays.app",
+  "appName": "goodays",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0d1120"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "presentationOptions": []
+    }
+  }
+}

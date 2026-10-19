@@ -11,7 +11,7 @@ function exportData() {
   const safeSettings = { ...settings };
   delete safeSettings.openrouterKey;
   return {
-    app: 'routin.fit',
+    app: 'goodays',
     format: 1,
     exportedAt: new Date().toISOString(),
     plans,
@@ -81,7 +81,7 @@ function SettingsScreen() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `routin-fit-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `goodays-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -92,7 +92,8 @@ function SettingsScreen() {
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
-      if (data.app !== 'routin.fit') throw new Error('This is not a routin.fit file.');
+      // Backups made before the rename say 'routin.fit'.
+      if (data.app !== 'goodays' && data.app !== 'routin.fit') throw new Error('This is not a goodays backup.');
       const before = useStore.getState();
       importData(data);
       const after = useStore.getState();

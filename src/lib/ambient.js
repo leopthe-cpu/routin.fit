@@ -3,6 +3,8 @@
 // download or license. Browsers only allow audio to start from a tap, so
 // `start` must be called from a click handler.
 
+import { tap } from '../native';
+
 let ctx = null;
 let nodes = null;
 
@@ -58,6 +60,7 @@ export function stopAmbient() {
 
 /** A short soft blip for the 3-2-1 countdown; a higher note on "go". */
 export function blip(high = false) {
+  tap(high); // in the iPhone app every cue is felt as well as heard
   try {
     ctx = ctx ?? new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();

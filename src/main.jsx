@@ -8,6 +8,7 @@ import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-500.css';
 import './index.css';
 import App from './App.jsx';
+import { isNative } from './native';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -15,7 +16,8 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 );
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// The iPhone app ships its files inside the app, so it needs no service worker.
+if (import.meta.env.PROD && !isNative && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {
       // offline support is optional; the app works without it
