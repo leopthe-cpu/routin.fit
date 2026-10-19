@@ -8,15 +8,16 @@ automatic rest timers and progress that survives navigation and reloads.
 
 The top third is a grainy sky that follows the clock (early, morning,
 afternoon, late afternoon, evening/night; `src/lib/sky.js`), with a greeting
-and a new phrase on each open. Below it: date, time, local weather, four tiles
-(Stretch, Workout, Meditate, Alarms), today's goals and the week's progress.
+and a new phrase on each open. Below it: date, time, local weather, the daily
+alarm, four tiles (Stretch, Workout, Meditate, Goals) and the week's progress.
 Swipe sideways for Plans, Progress and Settings.
 
 Tapping Stretch or Workout grows the sky to full screen with the session on
 frosted glass: a hands-free guided stretch (tap to pause, optional rain sound
 generated in the browser) or a one-exercise-at-a-time workout with Done set
-and a rest screen. "List" shows the whole day. Meditate and Alarms are
-previews for now.
+and a rest screen. "List" shows the whole day. Meditate is a guided session
+with a breathing sun; the alarm rings in the app while it's open (and as a
+notification in the iPhone app).
 
 Preview any sky with `?sky=early|morning|afternoon|late|evening`.
 
