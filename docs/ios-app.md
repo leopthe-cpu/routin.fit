@@ -24,12 +24,13 @@ need your Mac, Xcode and your Apple account.
 - A Mac with **Xcode** installed from the Mac App Store, opened once so it can
   finish installing its parts.
 - **Node 20 or newer** (`node -v`). If it's missing, install it from nodejs.org.
-- Your **Apple ID**.
-  - A free Apple ID is enough to run the app on your own iPhone. With a free
-    account the app stops opening after about 7 days (please verify this) and
-    you rebuild it.
-  - The **Apple Developer Program** (paid yearly) is needed for TestFlight and
-    the App Store. App Groups may also need it; see step 4.
+- Your **Apple ID**. A free one is enough to run the app on your own iPhone:
+  - Apple's table of capabilities lists App Groups and Background Modes for free
+    accounts. Time Sensitive Notifications isn't, so the app doesn't use it.
+  - With a free account the app stops opening after about 7 days (please verify
+    this). Plug in the phone and press Run again to renew it.
+  - The **Apple Developer Program** (paid yearly) is only needed for TestFlight
+    and the App Store.
 
 ## 1. Get the code and open the project
 
@@ -81,7 +82,6 @@ and add each of these:
 | Capability | Setting |
 |---|---|
 | **App Groups** | Click **+** and add `group.world.goodays.app` |
-| **Time Sensitive Notifications** | Nothing to set |
 | **Background Modes** | Tick **Audio, AirPlay, and Picture in Picture**. It may already be ticked from Info.plist. |
 
 The App Group is how the app hands today's numbers to the widgets.

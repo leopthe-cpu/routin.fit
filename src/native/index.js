@@ -57,7 +57,6 @@ export async function syncAlarm(alarm) {
           title: 'Good morning',
           body: 'A new day. Take it slow.',
           schedule: { on: { hour, minute }, allowWhileIdle: true },
-          interruptionLevel: 'timeSensitive',
           extra: { open: 'alarm' },
         },
       ],
@@ -82,7 +81,6 @@ export async function syncTimerAlert(live) {
           title: meditate ? 'Meditation complete' : live.status === 'Rest' ? 'Rest is over' : 'Next move',
           body: meditate ? 'Take a breath before you get up.' : live.title,
           schedule: { at: new Date(live.endsAt) },
-          interruptionLevel: 'timeSensitive',
         },
       ],
     });

@@ -11,10 +11,10 @@ summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oc
   Railway refused to add www.goodays.world: the plan's custom-domain limit is reached (routin.fit and www.routin.fit are attached). Decide: remove the unused routin.fit entry (GoDaddy forwards it) or upgrade. Then add the DNS records Claude sends, forward goodays.world and gooddays.world to https://www.goodays.world, export/import your data, and only then forward routin.fit.
   Source: Railway generate-domain error (2026-10-19)
 - [ ] First iPhone build in Xcode @me #ios
-  Follow docs/ios-app.md: signing, capabilities (App Groups, Time Sensitive Notifications), add the GoodaysWidgets extension, run on the phone. Confirm the bundle id world.goodays.app before the first App Store upload.
+  Follow docs/ios-app.md: signing, capabilities (App Groups, Background Modes), add the GoodaysWidgets extension, run on the phone. Confirm the bundle id world.goodays.app before the first App Store upload.
   Source: docs/ios-app.md
 - [ ] Join the Apple Developer Program @me #ios #decision
-  Needed for TestFlight and the App Store.
+  Not needed to run the app on your own phone; needed for TestFlight and the App Store.
 - [ ] Fix whatever the first Xcode build reports @claude #ios
   The Swift code (plugin, Live Activity, widgets) was written without a compiler.
   Source: commit "Rename to goodays and add the iPhone app"
