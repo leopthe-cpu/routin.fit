@@ -1,6 +1,6 @@
 ---
 project: routin.fit
-updated: 2026-10-19
+updated: 2026-10-22
 summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oct and live on Railway. An iPhone app (Capacitor, with Live Activity and widgets) is set up in the repo and waits for its first Xcode build. Single-user for now: everything stays on the device, there is no sign-in, and the AI plan import uses a key stored in the browser.
 ---
 
@@ -40,6 +40,12 @@ summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oc
 - [ ] Sign-in and accounts @claude #app
   Settings shows an account placeholder "until sign-in exists". Status unclear: no plan is documented.
   Source: commit "Add exercise weights, suggestions, Progress and Settings" (2026-10-16)
+- [ ] Sign-up protection: Turnstile CAPTCHA and password rules @claude #app #security
+  When accounts are built: Turnstile on sign-up, sign-in and password reset through the auth provider's built-in CAPTCHA support, and passwords of at least 8 characters with lower- and uppercase letters and a digit. Roll out code first, then CAPTCHA on in staging, then release, then CAPTCHA on in production.
+  Source: docs/DECISIONS.md, decision 1
+- [ ] Create the Turnstile widget and put its keys in place @me #security
+  Needed once accounts exist: create the widget in Cloudflare, put the site key in the app's environment settings and the secret key in the auth provider's CAPTCHA settings. Keys never go in chat or the repo.
+  Source: docs/DECISIONS.md, decision 1
 
 ## Waiting
 - [ ] Decide whether routin.fit is shared with other users @me #decision
