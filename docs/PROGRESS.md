@@ -1,6 +1,6 @@
 ---
 project: routin.fit
-updated: 2026-10-22
+updated: 2026-10-26
 summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oct and live on Railway. An iPhone app (Capacitor, with Live Activity and widgets) is set up in the repo and waits for its first Xcode build. Single-user for now: everything stays on the device, there is no sign-in, and the AI plan import uses a key stored in the browser.
 ---
 
@@ -90,6 +90,9 @@ summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oc
 - [x] iPhone app set up: haptics, timer and alarm notifications, Live Activity, Today widget (not compiled yet) @claude #ios (2026-10-19)
   55 tests pass; web build unchanged in the browser.
   Source: commit "Rename to goodays and add the iPhone app"; docs/ios-app.md
+- [x] Calendar with events and a filter; Olympique DG games added @claude #app (2026-10-26)
+  Month view of plan sessions and events (soccer, runs, rides…), a filter showing only the kinds in view, add one event or paste a schedule. 63 tests pass.
+  Source: commit "Calendar and events"
 
 ## Marketing
 - [ ] Plan marketing (nothing documented yet) @me

@@ -12,6 +12,7 @@ import TodayScreen from './screens/TodayScreen';
 import WeekScreen from './screens/WeekScreen';
 import PlansScreen from './screens/PlansScreen';
 import GoalsSection from './screens/GoalsSection';
+import CalendarSection from './screens/CalendarSection';
 import ProgressScreen from './screens/ProgressScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import RevealOverlay from './screens/reveal/RevealOverlay';
@@ -403,6 +404,7 @@ export default function App() {
               onSelectDate={setSelectedDate}
               onOpenSession={openFromWeek}
             />
+            <CalendarSection selectedDate={selectedDate} onSelectDate={setSelectedDate} onOpenSession={openFromWeek} />
             <GoalsSection />
             <PlansScreen />
           </section>

@@ -3,6 +3,7 @@ import { useNow } from '../hooks/useNow';
 import { Bell, BellOff, Check, Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Dumbbell, Flower2, MapPin, Moon, PersonStanding, Sun, Target } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus } from '../store';
 import { goalsTile, weekProgress } from '../lib/today';
+import { formatTime, kindInfo } from '../lib/events';
 import { dayKeyOf, toISODate } from '../lib/dates';
 import { estimateWorkoutMinutes, shortTitle } from '../lib/estimate';
 import { morningMinutes } from '../lib/morning';
@@ -163,6 +164,7 @@ function TodayScreen({ sky, onOpen }) {
   const day = plan?.days[dayKey];
 
   const goals = useStore((s) => s.goals);
+  const events = useStore((s) => s.events);
   const goalChecks = useStore((s) => s.goalChecks);
   const goal = goalsTile(goals, goalChecks, iso, dayKey);
 
@@ -179,6 +181,12 @@ function TodayScreen({ sky, onOpen }) {
   const planned = !day
     ? 'No plan yet'
     : [day.morning && 'Stretch', day.exercises.length ? day.title : 'Rest day'].filter(Boolean).join(', then ');
+  // Today's events after the plan, e.g. "… · Soccer 8:00 PM".
+  const todaysEvents = events
+    .filter((e) => e.date === iso)
+    .sort((a, b) => (a.time ?? '99').localeCompare(b.time ?? '99'))
+    .map((e) => [kindInfo(e.kind).label, formatTime(e.time)].filter(Boolean).join(' '));
+  const plannedLine = [planned, ...todaysEvents].join(' · ');
 
   return (
     // Sized to the screen: the tiles take whatever height is left, so Today never scrolls.
@@ -188,7 +196,7 @@ function TodayScreen({ sky, onOpen }) {
           <span className="label text-[12px]" style={{ color: 'var(--text-1)' }}>
             {date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </span>
-          <span className="label truncate text-[9px] text-3">{planned}</span>
+          <span className="label truncate text-[9px] text-3">{plannedLine}</span>
         </div>
         <Weather />
       </div>

@@ -1,9 +1,10 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Loader2, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useStore, makePlan } from '../store';
 import { parsePlanText, looksUnparsed, DAY_KEYS } from '../lib/parsePlan';
 import { normaliseWithAI } from '../lib/aiImport';
 import { estimateWorkoutMinutes } from '../lib/estimate';
+import { NEW_PLAN_EVENT } from './CalendarSection';
 
 const EXAMPLE = `Mon: Chest & Biceps
 * Morning Routine (5 min): cat-cow stretch, wrist circles, shoulder pass-throughs
@@ -105,6 +106,17 @@ function PlanEditor({ initial, onCancel, onSave }) {
 function PlansScreen() {
   const { plans, activePlanId, settings, addPlan, updatePlan, deletePlan, setActivePlan, setSettings } = useStore();
   const [editing, setEditing] = useState(null); // null | 'new' | plan id
+  const newRef = useRef(null);
+
+  // The calendar's Add → Workout plan opens the editor here.
+  useEffect(() => {
+    const open = () => {
+      setEditing('new');
+      requestAnimationFrame(() => newRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    };
+    window.addEventListener(NEW_PLAN_EVENT, open);
+    return () => window.removeEventListener(NEW_PLAN_EVENT, open);
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -189,6 +201,7 @@ function PlansScreen() {
         )}
       </div>
 
+      <div ref={newRef} />
       {editing === 'new' ? (
         <PlanEditor
           onCancel={() => setEditing(null)}

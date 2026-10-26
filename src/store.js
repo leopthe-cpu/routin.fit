@@ -7,6 +7,7 @@ import { exerciseKey } from './lib/weights';
 import { findStretch } from './data/stretches';
 import { moveSeconds } from './lib/morning';
 import { DEFAULT_PLAN_NAME, DEFAULT_PLAN_TEXT } from './data/defaultPlan';
+import { SEED_EVENTS } from './data/seedEvents';
 
 // localStorage can throw (private mode, blocked storage). Fall back to memory.
 const memory = new Map();
@@ -126,6 +127,9 @@ export const useStore = create(
       // A running meditation, so it survives minimizing:
       // { type, minutes, sound, startedAt, pausedAt, pausedTotal, doneAt }.
       meditation: null,
+      // Dated events beside the plan (games, runs, rides…):
+      // [{ id, kind, title, date: 'YYYY-MM-DD', time: 'HH:MM' | null, place, note }].
+      events: SEED_EVENTS,
       // One daily wake-up alarm: { time: 'HH:MM', on, lastRang: 'YYYY-MM-DD' | null }.
       alarm: { time: '06:30', on: false, lastRang: null },
       // True while the alarm is sounding (not saved).
@@ -190,6 +194,10 @@ export const useStore = create(
         })),
 
       /** Merge a backup or an import file. Newer weights win; history is de-duplicated. */
+      addEvents: (list) => set((s) => ({ events: [...s.events, ...list] })),
+      updateEvent: (id, patch) => set((s) => ({ events: s.events.map((e) => (e.id === id ? { ...e, ...patch } : e)) })),
+      deleteEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
+
       importData: (data) =>
         set((s) => {
           const weights = { ...s.weights };
@@ -210,7 +218,9 @@ export const useStore = create(
           const goalIds = new Set(s.goals.map((g) => g.id));
           const goals = [...s.goals, ...(data.goals ?? []).filter((g) => !goalIds.has(g.id))];
           const goalChecks = { ...(data.goalChecks ?? {}), ...s.goalChecks };
-          return { weights, history, plans, sessions, goals, goalChecks };
+          const eventIds = new Set(s.events.map((e) => e.id));
+          const events = [...s.events, ...(data.events ?? []).filter((e) => !eventIds.has(e.id))];
+          return { weights, history, plans, sessions, goals, goalChecks, events };
         }),
 
       /** Start (or resume) a session. The day's content is snapshotted so later plan edits don't break it. */
@@ -377,7 +387,7 @@ export const useStore = create(
     }),
     {
       name: 'workout-app',
-      version: 5,
+      version: 6,
       migrate: (persisted, version) => {
         // v2: drop the vague "Hyper-mobility & posture flow" move from saved plans.
         if (version < 2 && persisted?.plans) {
@@ -422,6 +432,11 @@ export const useStore = create(
           }
           if (persisted.settings && !persisted.settings.name) persisted.settings.name = 'Leo';
         }
+        // v6: events arrive, starting with the owner's league games.
+        if (version < 6 && persisted) {
+          const have = new Set((persisted.events ?? []).map((e) => e.id));
+          persisted.events = [...(persisted.events ?? []), ...SEED_EVENTS.filter((e) => !have.has(e.id))];
+        }
         return persisted;
       },
       storage: createJSONStorage(() => safeStorage),
@@ -445,6 +460,7 @@ export const useStore = create(
         goalChecks: s.goalChecks,
         meditation: s.meditation,
         alarm: s.alarm,
+        events: s.events,
       }),
     },
   ),

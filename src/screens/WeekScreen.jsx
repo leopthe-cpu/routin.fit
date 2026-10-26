@@ -1,9 +1,10 @@
 import { memo } from 'react';
-import { ChevronLeft, ChevronRight, Dumbbell, Moon, Sun } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell, MapPin, Moon, Sun } from 'lucide-react';
 import { useStore, sessionKey, sessionProgress, sessionStatus as statusOf } from '../store';
 import { weekDates, todayISO, planWeek, fromISODate } from '../lib/dates';
 import { morningCopy, workoutCopy } from '../lib/estimate';
 import DayCard from '../components/DayCard';
+import { formatTime, kindInfo } from '../lib/events';
 
 const LONG_DAY = {
   Mon: 'Monday',
@@ -18,6 +19,7 @@ const LONG_DAY = {
 function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
   const plan = useStore((s) => s.activePlan());
   const sessions = useStore((s) => s.sessions);
+  const allEvents = useStore((s) => s.events);
   const today = todayISO();
   const selected = fromISODate(selectedDate);
   const week = weekDates(selected);
@@ -124,6 +126,33 @@ function WeekScreen({ selectedDate, onSelectDate, onOpenSession }) {
       </div>
 
       <div className="space-y-3">
+        {allEvents
+          .filter((e) => e.date === selectedDate)
+          .sort((a, b) => (a.time ?? '99').localeCompare(b.time ?? '99'))
+          .map((e) => {
+            const k = kindInfo(e.kind);
+            return (
+              <div key={e.id} className="glass flex items-start gap-3 p-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: 'rgb(var(--ink-rgb) / 0.07)' }}>
+                  <k.icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-semibold">{e.title}</span>
+                  <span className="mt-0.5 flex items-center gap-1 text-sm text-2">
+                    {k.label}
+                    {e.time && ` · ${formatTime(e.time)}`}
+                    {e.place && (
+                      <>
+                        {' · '}
+                        <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{e.place}</span>
+                      </>
+                    )}
+                  </span>
+                  {e.note && <span className="mt-1 block text-xs text-3">{e.note}</span>}
+                </span>
+              </div>
+            );
+          })}
         {day.morning && cardFor('morning')}
         {day.exercises.length > 0 && cardFor('workout')}
         {day.exercises.length === 0 && (

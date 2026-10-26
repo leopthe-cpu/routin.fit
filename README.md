@@ -93,6 +93,17 @@ fixes. The tags are heuristics; `docs/library-report.md` lists what each rule
 produced for review. `src/lib/library.js` matches plan text to library entries
 and finds swaps that fit the user's gym, equipment and injuries.
 
+## Calendar and events
+
+The Plans page has a month calendar under the week strip. It shows the active
+plan's stretches and workouts plus events: games, runs, rides, swims and
+more (`src/lib/events.js`). The filter only offers the kinds that appear in
+the month on screen. **Add** creates a single event, reads a pasted schedule
+(every date in the text becomes an event, so a league's fixture list or a
+training block can be copied straight in), or opens a new workout plan.
+Events also show in the week view and on Today's plan line, and they're
+included in backups.
+
 ## iPhone app
 
 The same app wrapped with Capacitor, plus haptics, notifications, a Live
