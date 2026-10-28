@@ -41,3 +41,49 @@ that sends the token is live blocks every sign-in.
   in place. The site key goes in the app's environment settings; the secret
   key goes in the auth provider's CAPTCHA settings. Keys are never shared in
   chat or committed to the repo.
+
+## 2. Direction: a calendar for your day, with fitness and wellness built in (2026-10-28)
+
+**Status:** Accepted as the product direction. Not built yet.
+
+**Decision.** goodays grows from a workout and wellness app into the place to
+check your day and see what's coming. It shows one timeline of:
+
+- the plan's stretches and workouts, meditation and goals
+- your own events (games, runs, rides)
+- appointments from Apple, Google and Outlook calendars
+
+A simple filter hides the kinds you don't want to see, such as work meetings,
+so the view shows your regular appointments and routines.
+
+**How calendars connect, in order.**
+
+1. **iPhone app first, through Apple's calendar access (EventKit).** It reads
+   the calendars on the phone after a one-time permission prompt. Google and
+   Outlook accounts added in iOS Settings → Calendar should come along, as far
+   as we know; this needs testing on a real phone. Advantages: one
+   integration, no sign-in, no server, no keys, and the data stays on the
+   phone. Read-only at first.
+2. **Web, later, direct sign-in to Google and Microsoft.**
+   - Google Calendar API with a read-only scope.
+   - Microsoft Graph's calendar view with a read-only calendar permission.
+   - Both need registered apps and a sign-in flow, and likely a small server
+     to keep tokens.
+   - Google requires app verification for sensitive scopes before the
+     "unverified app" warning goes away.
+   - This waits for user accounts, which bring decision 1's sign-up
+     protection with them.
+
+**Filter.**
+
+- Each connected calendar can be switched on or off; for example, hide the
+  Work calendar.
+- One switch hides **meetings**: events with other attendees or a video-call
+  link.
+- Optional keyword rules hide events whose title matches.
+- The activity filter on the Plans calendar keeps working the same way: it
+  only offers the kinds in view.
+
+**Why.** Seeing training, wellness and appointments together answers "what
+does my day look like?" in one place, which is what the app is opened for each
+morning.

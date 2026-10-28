@@ -1,12 +1,25 @@
 ---
 project: routin.fit
 updated: 2026-10-28
-summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oct and live on Railway. An iPhone app (Capacitor, with Live Activity and widgets) is set up in the repo and waits for its first Xcode build. Single-user for now: everything stays on the device, there is no sign-in, and the AI plan import uses a key stored in the browser.
+summary: goodays (formerly routin.fit) is becoming a calendar for your day with fitness and wellness built in (docs/DECISIONS.md, decision 2). Live on Railway with a month calendar, events, guided sessions and goals; an iPhone app (Capacitor, Live Activity, widgets) waits for its first Xcode build. Single-user for now: everything stays on the device, no sign-in.
 ---
 
 ## Doing
 
 ## To do
+- [ ] Today as a day timeline: now, next, later @claude #app #direction
+  Merge plan sessions, events, goals (as tasks) and calendar appointments into one list for the day, with what's next on top. See docs/DECISIONS.md, decision 2.
+  Source: docs/DECISIONS.md, decision 2
+- [ ] Read Apple Calendar in the iPhone app (EventKit), read-only @claude #ios #direction
+  Covers calendars on the phone, which should include Google and Outlook accounts added in iOS Settings (to be tested). Needs the calendar permission text in Info.plist. After the first Xcode build.
+  Source: docs/DECISIONS.md, decision 2
+- [ ] Calendar filter: per-calendar switches, "hide meetings", keyword rules @claude #app #direction
+  Source: docs/DECISIONS.md, decision 2
+- [ ] One-off tasks beside recurring goals @claude #app #direction
+  Source: docs/DECISIONS.md, decision 2
+- [ ] Decide when to add web sign-in to Google and Outlook calendars @me #decision #direction
+  Needs app registrations with Google and Microsoft, a sign-in flow and user accounts; Google verification for sensitive scopes. Not needed for the iPhone route.
+  Source: docs/DECISIONS.md, decision 2
 - [ ] Type a set's weight directly in the workout focus view @claude #app #ux
   In the one-exercise-at-a-time view the weight only changes with − and +; tapping the number does nothing. Tapping it should open a number field (decimal keypad) so the weight can be typed. The list view's weight control already has a field.
   Source: src/screens/reveal/WorkoutFocus.jsx (weight stepper); reported by Oz 2026-10-28
