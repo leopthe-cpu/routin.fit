@@ -1,12 +1,15 @@
 ---
 project: routin.fit
-updated: 2026-10-26
+updated: 2026-10-28
 summary: goodays (formerly routin.fit), a calm daily-ritual app built 16–19 Oct and live on Railway. An iPhone app (Capacitor, with Live Activity and widgets) is set up in the repo and waits for its first Xcode build. Single-user for now: everything stays on the device, there is no sign-in, and the AI plan import uses a key stored in the browser.
 ---
 
 ## Doing
 
 ## To do
+- [ ] Type a set's weight directly in the workout focus view @claude #app #ux
+  In the one-exercise-at-a-time view the weight only changes with − and +; tapping the number does nothing. Tapping it should open a number field (decimal keypad) so the weight can be typed. The list view's weight control already has a field.
+  Source: src/screens/reveal/WorkoutFocus.jsx (weight stepper); reported by Oz 2026-10-28
 - [ ] Move to goodays.world @me #infra
   Railway refused to add www.goodays.world: the plan's custom-domain limit is reached (routin.fit and www.routin.fit are attached). Decide: remove the unused routin.fit entry (GoDaddy forwards it) or upgrade. Then add the DNS records Claude sends, forward goodays.world and gooddays.world to https://www.goodays.world, export/import your data, and only then forward routin.fit.
   Source: Railway generate-domain error (2026-10-19)
