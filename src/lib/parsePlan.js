@@ -176,6 +176,25 @@ export function parsePlanText(text) {
 }
 
 /** True when the parse looks too weak to trust; the UI then offers AI import. */
+/**
+ * Moves days around in a plan's text. `from` says which old day each weekday
+ * now takes, e.g. { Sat: 'Wed', Wed: 'Thu' } puts Wednesday's session on
+ * Saturday and Thursday's on Wednesday; every weekday keeps its own heading.
+ * Text missing any of the days involved comes back unchanged.
+ */
+export function movePlanDays(text, from) {
+  const parts = text.split(/^(?=(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):)/m);
+  const index = Object.fromEntries(DAY_KEYS.map((k) => [k, parts.findIndex((p) => p.startsWith(`${k}:`))]));
+  const involved = [...Object.keys(from), ...Object.values(from)];
+  if (involved.some((k) => index[k] < 0)) return text;
+  const old = [...parts];
+  // A day's content without its "Wed:" and without the blank lines after it, which stay put.
+  const body = (k) => old[index[k]].slice(4).replace(/\n*$/, '');
+  const trail = (k) => old[index[k]].match(/\n*$/)[0];
+  for (const [to, src] of Object.entries(from)) parts[index[to]] = `${to}:${body(src)}${trail(to)}`;
+  return parts.join('');
+}
+
 export function looksUnparsed(result) {
   const exerciseCount = Object.values(result.days).reduce((n, d) => n + d.exercises.length, 0);
   return result.dayCount === 0 || exerciseCount === 0;

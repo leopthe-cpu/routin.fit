@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePlanText, parseTarget, splitTopLevel, looksUnparsed } from './parsePlan';
+import { parsePlanText, parseTarget, splitTopLevel, looksUnparsed, movePlanDays } from './parsePlan';
 import { estimateWorkoutMinutes, musclesFor, toBlocks } from './estimate';
 import { DEFAULT_PLAN_TEXT } from '../data/defaultPlan';
 
@@ -12,9 +12,9 @@ describe('parsePlanText on the starter plan', () => {
   });
 
   it('marks rest days', () => {
-    expect(['Fri', 'Sun'].every((d) => days[d].isRest)).toBe(true);
-    expect(days.Wed.title).toBe('Legs & Core');
-    expect(musclesFor(days.Wed.exercises)).toEqual(['legs', 'core']);
+    expect(['Thu', 'Sun'].every((d) => days[d].isRest)).toBe(true);
+    expect(days.Sat.title).toBe('Legs & Core');
+    expect(musclesFor(days.Sat.exercises)).toEqual(['legs', 'core']);
     expect(days.Mon.isRest).toBe(false);
   });
 
@@ -23,7 +23,7 @@ describe('parsePlanText on the starter plan', () => {
     expect(days.Mon.morning.items).toHaveLength(4);
     expect(days.Mon.morning.items[3]).toBe('shoulder pass-throughs (with band/stick)');
     expect(days.Mon.exercises).toHaveLength(6);
-    expect(days.Wed.morning.items).toHaveLength(4);
+    expect(days.Sat.morning.items).toHaveLength(4);
   });
 
   it('keeps rest-day guidance as notes', () => {
@@ -32,32 +32,36 @@ describe('parsePlanText on the starter plan', () => {
   });
 
   it('splits the superset into a pair', () => {
-    const pair = days.Sat.exercises.filter((e) => e.supersetGroup);
+    const pair = days.Fri.exercises.filter((e) => e.supersetGroup);
     expect(pair.map((e) => e.name)).toEqual(['Standing Hammer Curls', 'Dumbbell Kickbacks']);
     expect(pair.every((e) => e.sets === 3 && e.target.label === '10-12')).toBe(true);
-    expect(toBlocks(days.Sat.exercises)).toHaveLength(7);
+    expect(toBlocks(days.Fri.exercises)).toHaveLength(7);
   });
 
   it('reads holds, failure sets and notes', () => {
-    const hang = days.Sat.exercises.find((e) => e.name.startsWith('Dead Hangs'));
+    const hang = days.Fri.exercises.find((e) => e.name.startsWith('Dead Hangs'));
     expect(hang.target).toMatchObject({ kind: 'hold', min: 30, max: 45 });
     expect(hang.note).toBe('Gym only');
-    const neck = days.Sat.exercises.find((e) => e.name === 'Neck Bridges');
+    const neck = days.Fri.exercises.find((e) => e.name === 'Neck Bridges');
     expect(neck.sets).toBe(2);
     expect(neck.note).toMatch(/Careful execution/);
-    const legRaise = days.Thu.exercises.find((e) => e.name === 'Lying Leg Raises');
+    const legRaise = days.Wed.exercises.find((e) => e.name === 'Lying Leg Raises');
     expect(legRaise.target.kind).toBe('failure');
-    expect(days.Sat.exercises.find((e) => e.name === 'Face Pulls').note).toBe(
+    expect(days.Fri.exercises.find((e) => e.name === 'Face Pulls').note).toBe(
       'or Banded/Cable Rear Delt Pulls',
     );
   });
 
   it('reads starting weights, marking estimates', () => {
     expect(days.Mon.exercises[0].startWeight).toEqual({ value: 31, unit: 'kg', estimated: false });
-    expect(days.Wed.exercises[0].startWeight).toMatchObject({ value: 16, estimated: true });
-    const [curls, kickbacks] = days.Sat.exercises.filter((e) => e.supersetGroup);
+    expect(days.Sat.exercises[0].startWeight).toMatchObject({ value: 16, estimated: true });
+    const [curls, kickbacks] = days.Fri.exercises.filter((e) => e.supersetGroup);
     expect([curls.startWeight.value, kickbacks.startWeight.value]).toEqual([15.5, 4]);
     expect(days.Mon.exercises[5].startWeight).toBeNull();
+  });
+
+  it('keeps legs off Tuesday to Thursday, around Wednesday-night games', () => {
+    for (const d of ['Tue', 'Wed', 'Thu']) expect(musclesFor(days[d].exercises)).not.toContain('legs');
   });
 
   it('never trains the same main muscle on back-to-back days', () => {
@@ -95,5 +99,17 @@ describe('helpers', () => {
     expect(r.days.Mon.exercises[0].name).toBe('Goblet Squat');
     expect(looksUnparsed(r)).toBe(false);
     expect(looksUnparsed(parsePlanText('do some pushups every morning'))).toBe(true);
+  });
+});
+
+describe('movePlanDays', () => {
+  const text = 'Mon: Push\n* Press: 3x8\n\nWed: Legs\n* Squat: 3x8\n\nSat: Pull\n* Row: 3x8\n';
+  it('moves days, keeping the weekday headings in place', () => {
+    const out = movePlanDays(text, { Wed: 'Sat', Sat: 'Wed' });
+    expect(out).toBe('Mon: Push\n* Press: 3x8\n\nWed: Pull\n* Row: 3x8\n\nSat: Legs\n* Squat: 3x8\n');
+    expect(parsePlanText(out).days.Sat.title).toBe('Legs');
+  });
+  it('leaves text without the days involved alone', () => {
+    expect(movePlanDays(text, { Wed: 'Fri', Fri: 'Wed' })).toBe(text);
   });
 });

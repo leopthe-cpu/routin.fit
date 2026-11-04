@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { parsePlanText } from './lib/parsePlan';
+import { parsePlanText, movePlanDays } from './lib/parsePlan';
 import { restSecondsFor } from './lib/estimate';
 import { todayISO } from './lib/dates';
 import { exerciseKey } from './lib/weights';
@@ -387,7 +387,7 @@ export const useStore = create(
     }),
     {
       name: 'workout-app',
-      version: 6,
+      version: 7,
       migrate: (persisted, version) => {
         // v2: drop the vague "Hyper-mobility & posture flow" move from saved plans.
         if (version < 2 && persisted?.plans) {
@@ -436,6 +436,17 @@ export const useStore = create(
         if (version < 6 && persisted) {
           const have = new Set((persisted.events ?? []).map((e) => e.id));
           persisted.events = [...(persisted.events ?? []), ...SEED_EVENTS.filter((e) => !have.has(e.id))];
+        }
+        // v7: the week works around Wednesday-night soccer. Legs move to Saturday,
+        // shoulders to Wednesday, rest to Thursday and the upper-body day to Friday.
+        // Only for plans still laid out like the starter plan.
+        if (version < 7 && persisted?.plans) {
+          const layout = [/^Wed: Legs & Core/m, /^Thu: Shoulders & Triceps/m, /^Fri: Rest Day/m, /^Sat: Upper Body/m];
+          persisted.plans = persisted.plans.map((p) => {
+            if (!layout.every((re) => re.test(p.sourceText ?? ''))) return p;
+            const sourceText = movePlanDays(p.sourceText, { Wed: 'Thu', Thu: 'Fri', Fri: 'Sat', Sat: 'Wed' });
+            return { ...p, sourceText, days: parsePlanText(sourceText).days };
+          });
         }
         return persisted;
       },

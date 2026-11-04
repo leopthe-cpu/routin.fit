@@ -8,6 +8,9 @@ export const DEFAULT_PLAN_NAME = 'Dumbbell Split';
 const MORNING =
   '* Morning Routine (5 min): 90/90 hip/groin opener, wrist/ankle circles, cat-cow stretch, shoulder pass-throughs (with band/stick).';
 
+// The week works around Wednesday-night soccer: no legs on Tuesday or
+// Wednesday so they're fresh for the game, Thursday is for recovering, and
+// legs move to Saturday.
 export const DEFAULT_PLAN_TEXT = `Mon: Chest & Biceps
 
 ${MORNING}
@@ -28,17 +31,7 @@ ${MORNING}
 * Heavy Dumbbell Shrugs: 3x8-10 @ ~20kg
 * Weighted Decline Sit-ups: 3x12-15 @ 5kg
 
-Wed: Legs & Core
-
-${MORNING}
-* Goblet Squat: 3x8-10 @ ~16kg
-* Dumbbell Romanian Deadlift: 3x8-10 @ ~14kg
-* Bulgarian Split Squat: 3x8-10 each leg @ ~8kg
-* Seated Leg Curl: 3x10-12 @ ~30kg
-* Standing Calf Raises: 3x12-15 @ ~12kg
-* Plank: 3x 45-60 sec hold
-
-Thu: Shoulders & Triceps
+Wed: Shoulders & Triceps
 
 ${MORNING}
 * Seated Dumbbell Shoulder Press: 3x6-8 @ 12kg
@@ -48,13 +41,13 @@ ${MORNING}
 * Lying Leg Raises: 3xFailure
 * Weighted Russian Twists: 3x15-20 @ 17.5kg
 
-Fri: Rest Day
+Thu: Rest Day
 REST DAY
 
 ${MORNING}
 * Active Recovery: Light 20-30 min walk or gentle stretching for blood flow.
 
-Sat: Upper Body, Forearms & Rear Delts
+Fri: Upper Body, Forearms & Rear Delts
 
 ${MORNING}
 * Flat Dumbbell Bench Press: 3x6-8 @ 42.5kg
@@ -64,6 +57,16 @@ ${MORNING}
 * Dead Hangs & Scapular Pull-Ups: 3x 30-45 sec hold (Gym only)
 * Neck Bridges (Careful execution / light bodyweight integration): 2x 10-15 reps or short holds (Gym/Safe mat area)
 * Dumbbell Floor Press: 3x10-12 @ ~12kg
+
+Sat: Legs & Core
+
+${MORNING}
+* Goblet Squat: 3x8-10 @ ~16kg
+* Dumbbell Romanian Deadlift: 3x8-10 @ ~14kg
+* Bulgarian Split Squat: 3x8-10 each leg @ ~8kg
+* Seated Leg Curl: 3x10-12 @ ~30kg
+* Standing Calf Raises: 3x12-15 @ ~12kg
+* Plank: 3x 45-60 sec hold
 
 Sun: Rest Day
 REST DAY

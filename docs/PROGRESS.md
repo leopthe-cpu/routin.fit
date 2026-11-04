@@ -1,6 +1,6 @@
 ---
 project: routin.fit
-updated: 2026-10-28
+updated: 2026-11-04
 summary: goodays (formerly routin.fit) is becoming a calendar for your day with fitness and wellness built in (docs/DECISIONS.md, decision 2). Live on Railway with a month calendar, events, guided sessions and goals; an iPhone app (Capacitor, Live Activity, widgets) waits for its first Xcode build. Single-user for now: everything stays on the device, no sign-in.
 ---
 
@@ -109,6 +109,9 @@ summary: goodays (formerly routin.fit) is becoming a calendar for your day with 
 - [x] Calendar with events and a filter; Olympique DG games added @claude #app (2026-10-26)
   Month view of plan sessions and events (soccer, runs, rides…), a filter showing only the kinds in view, add one event or paste a schedule. 63 tests pass.
   Source: commit "Calendar and events"
+- [x] Week rearranged around Wednesday-night soccer: no legs Tue–Thu, legs on Saturday @claude #app (2026-11-04)
+  Mon chest & biceps, Tue back, Wed shoulders & triceps, Thu rest, Fri upper body, Sat legs & core, Sun rest. Existing plans laid out like the starter plan move automatically (store v7). 67 tests pass, including no legs Tue–Thu and no muscle on back-to-back days.
+  Source: commit "Plan: keep legs fresh for Wednesday games"
 
 ## Marketing
 - [ ] Plan marketing (nothing documented yet) @me
